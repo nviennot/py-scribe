@@ -1,22 +1,22 @@
 from libc.stdlib cimport *
 from libc.errno cimport *
-cimport scribe
+from scribe.scribe_api cimport *
 import os
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
     log_offsets = list(log_offset[i] for i in range(num))
-    (<ScribeContext>private_data).on_backtrace(log_offsets)
+    (<Context>private_data).on_backtrace(log_offsets)
 
 cdef void on_diverge(void *private_data, scribe_event_diverge *event) with gil:
-    (<ScribeContext>private_data).on_diverge()
+    (<Context>private_data).on_diverge()
 
 cdef scribe_operations ops = {
     'on_backtrace': on_backtrace,
     'on_diverge': on_diverge
 }
 
-cdef class ScribeContext:
+cdef class Context:
     cdef scribe_context_t _ctx
 
     def __init__(self):
