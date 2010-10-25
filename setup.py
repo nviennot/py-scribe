@@ -11,7 +11,7 @@ setup(
     author_email='nicolas@viennot.biz',
     cmdclass = {'build_ext': build_ext},
     ext_modules = [Extension("scribe",
-        ["src/context.pyx"],
+        ["src/context.pyx", "src/scribe.pxd" ],
         libraries=["scribe"])]
 )
 
