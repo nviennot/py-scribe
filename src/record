@@ -1,0 +1,28 @@
+#!/usr/bin/python
+
+import scribe
+import os
+import sys
+from optparse import OptionParser
+
+if __name__ == '__main__':
+    usage = 'usage: %prog [options] command [argument ...]'
+    desc = 'Record a program execution and write it to a file. ' \
+           'The default output file is command.log where command is the ' \
+           'invoked process.'
+    parser = OptionParser(usage=usage, description=desc)
+
+    parser.add_option('-o', '--output', dest='logfile', metavar='FILE',
+            help='Write the recorded execution to FILE.')
+
+    parser.disable_interspersed_args()
+    (options, cmd) = parser.parse_args()
+    if not cmd:
+        parser.error('No command provided')
+
+    if not options.logfile:
+        options.logfile = cmd[0] + '.log'
+    logfile = open(options.logfile, 'w+')
+
+    ctx = scribe.Context()
+    ctx.record(logfile, cmd)

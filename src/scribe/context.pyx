@@ -1,6 +1,6 @@
 from libc.stdlib cimport *
 from libc.errno cimport *
-from scribe.scribe_api cimport *
+from scribe_api cimport *
 import os
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:

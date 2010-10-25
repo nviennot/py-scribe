@@ -5,8 +5,7 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import glob
 
-SCRIBE_PATH='src/scribe/'
-scribe_src = sum((glob.glob(SCRIBE_PATH + ext) \
+scribe_src = sum((glob.glob('src/scribe/' + ext) \
                  for ext in '*.pyx *.pxd'.split()), [])
 
 setup(
@@ -16,9 +15,8 @@ setup(
     author_email = 'nicolas@viennot.biz',
     cmdclass = {'build_ext': build_ext},
     package_dir = {'': 'src'},
-    packages = ['scribe'],
     ext_modules = [Extension('scribe',
                              sources = scribe_src,
-                             libraries = ['scribe'])]
+                             libraries = ['scribe'])],
+    scripts=['src/record']
 )
-
