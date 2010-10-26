@@ -1,0 +1,26 @@
+#!/usr/bin/python
+
+import scribe
+import os
+import sys
+from optparse import OptionParser
+
+if __name__ == '__main__':
+    usage = 'usage: %prog [options] log_file'
+    desc = 'Replay a previously recorded execution.'
+    parser = OptionParser(usage=usage, description=desc)
+
+    parser.add_option('-b', '--backtrace', dest='backtrace_len',
+            metavar='LEN', type='int', default=100,
+            help='Specify the maximum number of entries in the backtrace. ' \
+                 'The default is 100.')
+
+    (options, args) = parser.parse_args()
+    if not args:
+        parser.error('Give me a log file')
+    if len(args) > 2:
+        parser.error('You have extra arguments')
+    logfile = open(args[0], 'r')
+
+    ctx = scribe.Context()
+    ctx.replay(logfile, options.backtrace_len)

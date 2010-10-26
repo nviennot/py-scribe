@@ -6,7 +6,7 @@ from Cython.Distutils import build_ext
 import glob
 
 scribe_src = sum((glob.glob('src/scribe/' + ext) \
-                 for ext in '*.pyx *.pxd'.split()), [])
+                 for ext in '*.pyx *.pxd *.pxi'.split()), [])
 
 setup(
     name = 'Scribe',
@@ -18,5 +18,5 @@ setup(
     ext_modules = [Extension('scribe',
                              sources = scribe_src,
                              libraries = ['scribe'])],
-    scripts=['src/record']
+    scripts=['src/record', 'src/replay']
 )
