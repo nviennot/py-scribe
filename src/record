@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
 import scribe
-import os
-import sys
 from optparse import OptionParser
 
-if __name__ == '__main__':
+def main():
     usage = 'usage: %prog [options] command [argument ...]'
     desc = 'Record a program execution and write it to a file. ' \
            'The default output file is command.log where command is the ' \
@@ -26,3 +24,6 @@ if __name__ == '__main__':
 
     ctx = scribe.Context()
     ctx.record(logfile, cmd)
+
+if __name__ == '__main__':
+    main()

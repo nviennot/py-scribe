@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import scribe
-import os
 import sys
 import mmap
 from optparse import OptionParser
@@ -24,7 +23,7 @@ def dump_backtrace(logfile, ex):
             continue
         print("[%02d] %s%s" % (info.pid, ("", "    ")[info.in_syscall], event))
 
-if __name__ == '__main__':
+def main():
     usage = 'usage: %prog [options] log_file'
     desc = 'Replay a previously recorded execution.'
     parser = OptionParser(usage=usage, description=desc)
@@ -51,3 +50,6 @@ if __name__ == '__main__':
         print("\nReplay Diverged:")
         print("[%02d] %s" % (ex.event.pid, ex.event))
         sys.exit(1)
+
+if __name__ == '__main__':
+    main()

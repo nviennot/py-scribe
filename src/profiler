@@ -1,12 +1,10 @@
 #!/usr/bin/python
 
 import scribe
-import os
-import sys
 import mmap
 from optparse import OptionParser
 
-if __name__ == '__main__':
+def main():
     usage = 'usage: %prog [options] log_file'
     desc = 'Display in a human readable format a scribe log file'
     parser = OptionParser(usage=usage, description=desc)
@@ -33,3 +31,6 @@ if __name__ == '__main__':
     else:
         for event in scribe.EventsFromBuffer(logfile_map):
             print(event)
+
+if __name__ == '__main__':
+    main()
