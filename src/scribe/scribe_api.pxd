@@ -123,8 +123,8 @@ cdef extern from "linux/scribe_api.h" nogil:
         __u8 size
         __u8 data[128]
 
-    int is_sized_type(int type)
-    int is_diverge_type(int type)
+    bint is_sized_type(int type)
+    bint is_diverge_type(int type)
 
     # XXX The additional payload of sized event is NOT accounted here.
     size_t sizeof_event_from_type(__u8 type)

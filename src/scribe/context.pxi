@@ -1,6 +1,7 @@
 from libc.stdlib cimport *
 from libc.errno cimport *
 from scribe_api cimport *
+cimport cpython
 import os
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
@@ -9,7 +10,10 @@ cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil
     (<Context>private_data).on_backtrace(log_offsets)
 
 cdef void on_diverge(void *private_data, scribe_event_diverge *event) with gil:
-    (<Context>private_data).on_diverge()
+    buffer = cpython.PyBytes_FromStringAndSize(
+                 <char *>event,
+                 sizeof_event(<scribe_event *>event))
+    (<Context>private_data).on_diverge(Event_from_bytes(buffer))
 
 cdef scribe_operations ops = {
     'on_backtrace': on_backtrace,
@@ -56,5 +60,5 @@ cdef class Context:
     def on_backtrace(self, log_offsets):
         pass
 
-    def on_diverge(self):
+    def on_diverge(self, event):
         pass
