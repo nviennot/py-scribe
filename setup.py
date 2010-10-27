@@ -18,5 +18,5 @@ setup(
     ext_modules = [Extension('scribe',
                              sources = scribe_src,
                              libraries = ['scribe'])],
-    scripts=['src/record', 'src/replay']
+    scripts=['src/record', 'src/replay', 'src/profiler']
 )
