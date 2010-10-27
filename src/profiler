@@ -7,9 +7,14 @@ import mmap
 from optparse import OptionParser
 
 if __name__ == '__main__':
-    usage = 'usage: %prog log_file'
+    usage = 'usage: %prog [options] log_file'
     desc = 'Display in a human readable format a scribe log file'
     parser = OptionParser(usage=usage, description=desc)
+
+    parser.add_option("-r", "--raw",
+                      action="store_false", dest="annotated", default=True,
+                      help="Do not annotate the log file: "
+                           "display the raw event stream")
 
     (options, args) = parser.parse_args()
     if not args:
@@ -20,5 +25,11 @@ if __name__ == '__main__':
 
     logfile_map = mmap.mmap(logfile.fileno(), 0)
 
-    for info, event in scribe.AnnotatedEventsFromBuffer(logfile_map):
-        print("[%02d] %s%s" % (info.pid, ("", "    ")[info.in_syscall], event))
+    if options.annotated:
+        for info, event in scribe.AnnotatedEventsFromBuffer(logfile_map):
+            print("[%02d] %s%s" % (info.pid,
+                                   ("", "    ")[info.in_syscall],
+                                   event))
+    else:
+        for event in scribe.EventsFromBuffer(logfile_map):
+            print(event)
