@@ -20,8 +20,16 @@ cdef scribe_operations ops = {
     'on_diverge': on_diverge
 }
 
+class DivergeError(BaseException):
+    def __init__(self, event, backtrace_offsets):
+        self.event = event
+        self.has_backtrace = backtrace_offsets is not None
+        self.backtrace_offsets = backtrace_offsets
+
 cdef class Context:
     cdef scribe_context_t _ctx
+    cdef object log_offsets
+    cdef object diverge_event
 
     def __init__(self):
         err = scribe_context_create(&self._ctx, &ops, <void *>self)
@@ -53,12 +61,17 @@ cdef class Context:
             free(_args)
 
     def replay(self, logfile, backtrace_len=100):
+        self.log_offsets = None
+        self.diverge_event = None
         err = scribe_replay(self._ctx, 0, logfile.fileno(), backtrace_len)
         if err:
+            if errno == EDIVERGE and self.diverge_event is not None:
+                raise DivergeError(event = self.diverge_event,
+                                   backtrace_offsets = self.log_offsets)
             raise OSError(errno, os.strerror(errno))
 
     def on_backtrace(self, log_offsets):
-        pass
+        self.log_offsets = log_offsets
 
     def on_diverge(self, event):
-        pass
+        self.diverge_event = event
