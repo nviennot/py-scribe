@@ -1,3 +1,6 @@
+cdef extern from "errno.h":
+    enum: EINTR
+
 cdef extern from "linux/types.h":
     ctypedef long long loff_t
     ctypedef unsigned char __u8

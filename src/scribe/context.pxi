@@ -133,9 +133,14 @@ cdef class Context:
         return pid
 
     def wait(self):
-        err = scribe_wait(self._ctx)
-        if err:
-            if errno == EDIVERGE and self.diverge_event is not None:
+        while True:
+            err = scribe_wait(self._ctx)
+            if err == 0:
+                break
+            if err == -2 and errno == EINTR:
+                cpython.PyErr_CheckSignals()
+                continue
+            if errno == EDIVERGE:
                 raise DivergeError(event = self.diverge_event,
                                    backtrace_offsets = self.log_offsets)
             raise OSError(errno, os.strerror(errno))
@@ -189,7 +194,8 @@ class Popen(subprocess.Popen, Context):
 
 
     def wait(self):
-        Context.wait(self)
+        if self.returncode is None:
+            Context.wait(self)
         return subprocess.Popen.wait(self)
 
 
