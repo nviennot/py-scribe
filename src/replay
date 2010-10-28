@@ -5,24 +5,6 @@ import sys
 import mmap
 from optparse import OptionParser
 
-def dump_backtrace(logfile, ex):
-    print("Backtrace:")
-
-    logfile_map = mmap.mmap(logfile.fileno(), 0)
-
-    it = scribe.AnnotatedEventsFromBuffer(logfile_map)
-
-    events = dict((info.offset, (info, event)) for info, event in it if
-                  info.offset in ex.backtrace_offsets)
-    for offset in ex.backtrace_offsets:
-        try:
-            (info, event) = events[offset]
-        except KeyError:
-            # That must be an EventPid of EventSyscallEnd, we don't have them
-            # in the list.
-            continue
-        print("[%02d] %s%s" % (info.pid, ("", "    ")[info.in_syscall], event))
-
 def main():
     usage = 'usage: %prog [options] log_file'
     desc = 'Replay a previously recorded execution.'
@@ -38,18 +20,11 @@ def main():
         parser.error('Give me a log file')
     if len(args) > 2:
         parser.error('You have extra arguments')
-    logfile = open(args[0], 'r+')
+    logfile = open(args[0], 'r')
 
     ps = scribe.Popen(logfile, replay = True,
                       backtrace_len = options.backtrace_len)
-    try:
-        ps.wait()
-    except scribe.DivergeError as ex:
-        if ex.has_backtrace:
-            dump_backtrace(logfile, ex)
-        print("\nReplay Diverged:")
-        print("[%02d] %s" % (ex.event.pid, ex.event))
-        sys.exit(1)
+    ps.wait()
 
 if __name__ == '__main__':
     main()

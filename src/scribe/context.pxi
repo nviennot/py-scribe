@@ -8,6 +8,8 @@ import subprocess
 import gc
 import pickle
 import traceback
+import mmap
+import io
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
@@ -78,18 +80,56 @@ cdef scribe_operations scribe_ops_with_init_loader = {
 
 
 
-class DivergeError(BaseException):
-    def __init__(self, event, backtrace_offsets):
+class DivergeError(Exception):
+    def __init__(self, event, logfile, backtrace_offsets):
         self.event = event
+        self.logfile = logfile
         self.has_backtrace = backtrace_offsets is not None
         self.backtrace_offsets = backtrace_offsets
 
+    def _dump_backtrace(self, str):
+        str.write("\nBacktrace:\n")
+
+        try:
+            logfile_map = mmap.mmap(self.logfile.fileno(), 0,
+                                    prot = mmap.PROT_READ)
+        except:
+            str.write("Cannot mmap the logfile, no backtrace :(\n")
+            return
+
+        it = AnnotatedEventsFromBuffer(logfile_map)
+        events = dict((info.offset, (info, event)) for info, event in it if
+                      info.offset in self.backtrace_offsets)
+        for offset in self.backtrace_offsets:
+            try:
+                (info, event) = events[offset]
+            except KeyError:
+                # That must be an EventPid of EventSyscallEnd, we don't have
+                # them in the list.
+                continue
+            str.write("[%02d] %s%s\n" %
+                      (info.pid, ("", "    ")[info.in_syscall], event))
+
+    def __str__(self):
+        with io.StringIO() as str:
+            if self.has_backtrace:
+                self._dump_backtrace(str)
+            if self.event:
+                str.write("Replay Diverged:\n")
+                str.write("[%02d] %s\n" % (self.event.pid, self.event))
+            else:
+                str.write("Replay Diverged for unknown reason.\n")
+            return str.getvalue()
+
+
+
 cdef class Context:
     cdef scribe_context_t _ctx
+    cdef object logfile
     cdef object log_offsets
     cdef object diverge_event
 
-    def __init__(self, has_init_loader=False):
+    def __init__(self, logfile, has_init_loader=False):
         cdef scribe_operations *ops
         if has_init_loader:
             ops = &scribe_ops_with_init_loader
@@ -100,10 +140,12 @@ cdef class Context:
         if err:
             raise OSError(errno, os.strerror(errno))
 
+        self.logfile = logfile
+
     def __del__(self):
         scribe_context_destroy(self._ctx)
 
-    def record(self, logfile, args, env):
+    def record(self, args, env):
         cdef char **_args = NULL
         cdef char **_env = NULL
 
@@ -116,7 +158,7 @@ cdef class Context:
             if env is not None:
                 _env = list_to_pstr(benv)
 
-            pid = scribe_record(self._ctx, 0, logfile.fileno(), _args, _env)
+            pid = scribe_record(self._ctx, 0, self.logfile.fileno(), _args, _env)
             if pid < 0:
                 raise OSError(errno, os.strerror(errno))
             return pid
@@ -124,10 +166,10 @@ cdef class Context:
             free(_args)
             free(_env)
 
-    def replay(self, logfile, backtrace_len=100):
+    def replay(self, backtrace_len=100):
         self.log_offsets = None
         self.diverge_event = None
-        pid = scribe_replay(self._ctx, 0, logfile.fileno(), backtrace_len)
+        pid = scribe_replay(self._ctx, 0, self.logfile.fileno(), backtrace_len)
         if pid < 0:
             raise OSError(errno, os.strerror(errno))
         return pid
@@ -142,6 +184,7 @@ cdef class Context:
                 continue
             if errno == EDIVERGE:
                 raise DivergeError(event = self.diverge_event,
+                                   logfile = self.logfile,
                                    backtrace_offsets = self.log_offsets)
             raise OSError(errno, os.strerror(errno))
 
@@ -159,11 +202,13 @@ cdef class Context:
 class Popen(subprocess.Popen, Context):
     def __init__(self, logfile, args=None, bufsize=0, executable=None,
                  stdin=None, stdout=None, stderr=None,
-                 preexec_fn=None, close_fds=False, shell=False,
+                 preexec_fn=None, close_fds=True, shell=False,
                  cwd=None, env=None, universal_newlines=False,
                  record=False, replay=False,
                  backtrace_len=100,
                  startupinfo=None, creationflags=0):
+        """ XXX close_fds=True by default
+        """
 
         if not record ^ replay:
             raise ValueError('Please provide one of the two mode: record, or '
@@ -176,10 +221,9 @@ class Popen(subprocess.Popen, Context):
                                  'specified')
 
         self.do_record = record
-        self.logfile = logfile
         self.backtrace_len = backtrace_len
 
-        Context.__init__(self, has_init_loader = True)
+        Context.__init__(self, logfile, has_init_loader = True)
         subprocess.Popen.__init__(self, args,
                 bufsize=bufsize, executable=executable,
                  stdin=stdin, stdout=stdout, stderr=stderr,
@@ -303,9 +347,9 @@ class Popen(subprocess.Popen, Context):
                 gc.disable()
                 try:
                     if self.do_record:
-                        self.pid = self.record(self.logfile, args, env)
+                        self.pid = self.record(args, env)
                     else:
-                        self.pid = self.replay(self.logfile, self.backtrace_len)
+                        self.pid = self.replay(self.backtrace_len)
                 except:
                     if gc_was_enabled:
                         gc.enable()
