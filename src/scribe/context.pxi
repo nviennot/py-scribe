@@ -9,7 +9,6 @@ import gc
 import pickle
 import traceback
 import mmap
-import io
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
@@ -81,21 +80,24 @@ cdef scribe_operations scribe_ops_with_init_loader = {
 
 
 class DivergeError(Exception):
-    def __init__(self, event, logfile, backtrace_offsets):
+    def __init__(self, event, logfile,
+                 backtrace_offsets, additional_trace=None):
         self.event = event
         self.logfile = logfile
         self.has_backtrace = backtrace_offsets is not None
         self.backtrace_offsets = backtrace_offsets
+        self.additional_trace = additional_trace
 
-    def _dump_backtrace(self, str):
-        str.write("\nBacktrace:\n")
+    def _dump_backtrace(self):
+        strs = []
+        strs.append("Backtrace:")
 
         try:
             logfile_map = mmap.mmap(self.logfile.fileno(), 0,
                                     prot = mmap.PROT_READ)
         except:
-            str.write("Cannot mmap the logfile, no backtrace :(\n")
-            return
+            strs.append("  Cannot mmap the logfile, no backtrace :(")
+            return strs
 
         it = AnnotatedEventsFromBuffer(logfile_map)
         events = dict((info.offset, (info, event)) for info, event in it if
@@ -107,19 +109,26 @@ class DivergeError(Exception):
                 # That must be an EventPid of EventSyscallEnd, we don't have
                 # them in the list.
                 continue
-            str.write("[%02d] %s%s\n" %
-                      (info.pid, ("", "    ")[info.in_syscall], event))
+            strs.append("  [%02d] %s%s" %
+                        (info.pid, ("", "    ")[info.in_syscall], event))
+        return strs
 
     def __str__(self):
-        with io.StringIO() as str:
-            if self.has_backtrace:
-                self._dump_backtrace(str)
-            if self.event:
-                str.write("Replay Diverged:\n")
-                str.write("[%02d] %s\n" % (self.event.pid, self.event))
-            else:
-                str.write("Replay Diverged for unknown reason.\n")
-            return str.getvalue()
+        strs = []
+        strs.append("")
+        if self.has_backtrace:
+            strs.extend(self._dump_backtrace())
+        if self.event:
+            strs.append("Replay Diverged:")
+            strs.append("  [%02d] %s" % (self.event.pid, self.event))
+        else:
+            strs.append("Replay Diverged for unknown reason.")
+        if self.additional_trace:
+            strs.append("Additional trace:")
+            for line in self.additional_trace.split('\n'):
+                if line:
+                    strs.append("  %s" % line)
+        return '\n'.join(strs)
 
 
 
@@ -128,8 +137,9 @@ cdef class Context:
     cdef object logfile
     cdef object log_offsets
     cdef object diverge_event
+    cdef bint show_dmesg
 
-    def __init__(self, logfile, has_init_loader=False):
+    def __init__(self, logfile, has_init_loader=False, show_dmesg=False):
         cdef scribe_operations *ops
         if has_init_loader:
             ops = &scribe_ops_with_init_loader
@@ -141,6 +151,7 @@ cdef class Context:
             raise OSError(errno, os.strerror(errno))
 
         self.logfile = logfile
+        self.show_dmesg = show_dmesg
 
     def __del__(self):
         scribe_context_destroy(self._ctx)
@@ -169,6 +180,8 @@ cdef class Context:
     def replay(self, backtrace_len=100):
         self.log_offsets = None
         self.diverge_event = None
+        if self.show_dmesg:
+            os.system('dmesg -c > /dev/null')
         pid = scribe_replay(self._ctx, 0, self.logfile.fileno(), backtrace_len)
         if pid < 0:
             raise OSError(errno, os.strerror(errno))
@@ -183,9 +196,15 @@ cdef class Context:
                 cpython.PyErr_CheckSignals()
                 continue
             if errno == EDIVERGE:
+                dmesg = None
+                if self.show_dmesg:
+                    ps = subprocess.Popen('dmesg', stdout=subprocess.PIPE)
+                    (dmesg, _) = ps.communicate()
+                    dmesg = dmesg.decode()
                 raise DivergeError(event = self.diverge_event,
                                    logfile = self.logfile,
-                                   backtrace_offsets = self.log_offsets)
+                                   backtrace_offsets = self.log_offsets,
+                                   additional_trace = dmesg)
             raise OSError(errno, os.strerror(errno))
 
     def init_loader(self, argv, envp):
@@ -205,7 +224,7 @@ class Popen(subprocess.Popen, Context):
                  preexec_fn=None, close_fds=True, shell=False,
                  cwd=None, env=None, universal_newlines=False,
                  record=False, replay=False,
-                 backtrace_len=100,
+                 backtrace_len=100, show_dmesg=False,
                  startupinfo=None, creationflags=0):
         """ XXX close_fds=True by default
         """
@@ -223,7 +242,8 @@ class Popen(subprocess.Popen, Context):
         self.do_record = record
         self.backtrace_len = backtrace_len
 
-        Context.__init__(self, logfile, has_init_loader = True)
+        Context.__init__(self, logfile, has_init_loader = True,
+                         show_dmesg=show_dmesg)
         subprocess.Popen.__init__(self, args,
                 bufsize=bufsize, executable=executable,
                  stdin=stdin, stdout=stdout, stderr=stderr,
