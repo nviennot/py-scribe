@@ -16,6 +16,7 @@ setup(
     cmdclass = {'build_ext': build_ext},
     package_dir = {'': 'src'},
     ext_modules = [Extension('scribe',
+                             extra_compile_args = ['-Wall', '-O2'],
                              sources = scribe_src,
                              libraries = ['scribe'])],
     scripts=['src/record', 'src/replay', 'src/profiler']

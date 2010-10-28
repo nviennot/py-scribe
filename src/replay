@@ -40,10 +40,10 @@ def main():
         parser.error('You have extra arguments')
     logfile = open(args[0], 'r+')
 
-    ctx = scribe.Context()
-
+    ps = scribe.Popen(logfile, replay = True,
+                      backtrace_len = options.backtrace_len)
     try:
-        ctx.replay(logfile, options.backtrace_len)
+        ps.wait()
     except scribe.DivergeError as ex:
         if ex.has_backtrace:
             dump_backtrace(logfile, ex)

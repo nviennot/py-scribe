@@ -12,6 +12,9 @@ def main():
 
     parser.add_option('-o', '--output', dest='logfile', metavar='FILE',
             help='Write the recorded execution to FILE.')
+    parser.add_option("-s", "--shell",
+                      action="store_true", dest="shell", default=False,
+                      help="Run the command through the shell")
 
     parser.disable_interspersed_args()
     (options, cmd) = parser.parse_args()
@@ -22,8 +25,8 @@ def main():
         options.logfile = cmd[0] + '.log'
     logfile = open(options.logfile, 'w+')
 
-    ctx = scribe.Context()
-    ctx.record(logfile, cmd)
+    ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
+    ps.wait()
 
 if __name__ == '__main__':
     main()

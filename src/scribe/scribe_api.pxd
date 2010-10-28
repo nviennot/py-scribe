@@ -8,6 +8,7 @@ cdef extern from "linux/types.h":
     ctypedef short __s16
     ctypedef int __s32
     ctypedef long __s64
+    ctypedef int pid_t
 
 cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
@@ -134,18 +135,20 @@ cdef extern from "linux/scribe_api.h" nogil:
 cdef extern from "scribe.h" nogil:
     struct scribe_context
     ctypedef scribe_context *scribe_context_t
+    ctypedef char * char_p_const "char *const"
 
     struct scribe_operations:
+        void (*init_loader) (void *private_data, char_p_const *argv, char_p_const *envp)
         void (*on_backtrace) (void *private_data, loff_t *log_offset, int num)
         void (*on_diverge) (void *private_data, scribe_event_diverge *event)
 
     int scribe_context_create(scribe_context_t *pctx, scribe_operations *ops, void *private_data)
     int scribe_context_destroy(scribe_context_t ctx)
 
-
-    enum: CUSTOM_INIT_PROCESS
-    int scribe_record(scribe_context_t ctx, int flags, int log_fd, char **argv)
-    int scribe_replay(scribe_context_t ctx, int flags, int log_fd, int backtrace_len)
+    pid_t scribe_record(scribe_context_t ctx, int flags, int log_fd,
+                        char_p_const *argv, char_p_const *envp)
+    pid_t scribe_replay(scribe_context_t ctx, int flags, int log_fd, int backtrace_len)
+    int scribe_wait(scribe_context_t ctx)
 
     int scribe_stop(scribe_context_t ctx)
     char *scribe_get_event_str(char *str, size_t size, scribe_event *event)
