@@ -116,6 +116,20 @@ cdef class EventSyscallEnd(Event):
 cdef class EventQueueEof(Event):
     type = Event.register(EventQueueEof, SCRIBE_EVENT_QUEUE_EOF)
 
+cdef class EventResourceLock(Event):
+    type = Event.register(EventResourceLock, SCRIBE_EVENT_RESOURCE_LOCK)
+
+    property resource_type:
+        def __get__(self):
+            return (<scribe_event_resource_lock *>self.event_struct).type
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_resource_lock *>self.event_struct).serial
+
+cdef class EventResourceUnlock(Event):
+    type = Event.register(EventResourceUnlock, SCRIBE_EVENT_RESOURCE_UNLOCK)
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
@@ -164,3 +178,12 @@ cdef class EventDivergeDataContent(EventDiverge):
                         self.event_struct).data,
                     (<scribe_event_diverge_data_content *>
                         self.event_struct).size)
+
+cdef class EventDivergeResourceType(EventDiverge):
+    type = Event.register(EventDivergeResourceType,
+                          SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE)
+
+    property resource_type:
+        def __get__(self):
+            return (<scribe_event_diverge_resource_type *>
+                    self.event_struct).type

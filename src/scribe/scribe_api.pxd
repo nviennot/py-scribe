@@ -23,6 +23,8 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_SYSCALL
         SCRIBE_EVENT_SYSCALL_END
         SCRIBE_EVENT_QUEUE_EOF
+        SCRIBE_EVENT_RESOURCE_LOCK
+        SCRIBE_EVENT_RESOURCE_UNLOCK
         # userspace -> kernel commands
         SCRIBE_EVENT_ATTACH_ON_EXECVE
         SCRIBE_EVENT_RECORD
@@ -36,6 +38,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_DIVERGE_DATA_TYPE
         SCRIBE_EVENT_DIVERGE_DATA_PTR
         SCRIBE_EVENT_DIVERGE_DATA_CONTENT
+        SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE
 
     struct scribe_event:
         __u8 type
@@ -79,6 +82,14 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event h
 
     struct scribe_event_queue_eof:
+        scribe_event h
+
+    struct scribe_event_resource_lock:
+        scribe_event h
+        __u8 type
+        __u32 serial
+
+    struct scribe_event_resource_unlock:
         scribe_event h
 
     struct scribe_event_attach_on_execve:
@@ -126,6 +137,10 @@ cdef extern from "linux/scribe_api.h" nogil:
         __u16 offset
         __u8 size
         __u8 data[128]
+
+    struct scribe_event_diverge_resource_type:
+        scribe_event_diverge h
+        __u8 type
 
     bint is_sized_type(int type)
     bint is_diverge_type(int type)
