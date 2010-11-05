@@ -41,6 +41,7 @@ class EventInfo:
 cdef class AnnotatedEventsFromBuffer:
     cdef EventsFromBuffer raw_iter
     cdef int pid
+    cdef int res_depth
     cdef bint in_syscall
 
     def __init__(self, buffer):
@@ -49,6 +50,7 @@ cdef class AnnotatedEventsFromBuffer:
     def __iter__(self):
         self.raw_iter.__iter__()
         self.pid = 0
+        self.res_depth = 0
         self.in_syscall = 0
         return self
 
@@ -60,9 +62,12 @@ cdef class AnnotatedEventsFromBuffer:
             if isinstance(event, EventPid):
                 self.pid = event.pid
                 continue
-
-            if isinstance(event, EventSyscallEnd):
+            elif isinstance(event, EventSyscallEnd):
                 self.in_syscall = False
+                continue
+            elif isinstance(event, EventResourceUnlock):
+                self.res_depth = self.res_depth - 1
+                assert self.res_depth >= 0
                 continue
 
             event_info = EventInfo(pid = self.pid,
@@ -71,5 +76,7 @@ cdef class AnnotatedEventsFromBuffer:
 
             if isinstance(event, EventSyscall):
                 self.in_syscall = True
+            elif isinstance(event, EventResourceLock):
+                self.res_depth = self.res_depth + 1
 
             return event_info, event

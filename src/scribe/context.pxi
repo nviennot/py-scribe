@@ -109,8 +109,10 @@ class DivergeError(Exception):
                 # That must be an EventPid of EventSyscallEnd, we don't have
                 # them in the list.
                 continue
-            strs.append("  [%02d] %s%s" %
-                        (info.pid, ("", "    ")[info.in_syscall], event))
+            strs.append("  [%02d] %s%s%s" % (info.pid,
+                                             ("", "    ")[info.in_syscall],
+                                             "  " * info.res_depth,
+                                             event))
         return strs
 
     def __str__(self):
