@@ -33,16 +33,25 @@ cdef class EventsFromBuffer:
         return event
 
 class EventInfo:
-    def __init__(self, pid, in_syscall, offset):
+    def __init__(self, pid, in_syscall, res_depth, offset):
         self.pid = pid
         self.in_syscall = in_syscall
+        self.res_depth = res_depth
         self.offset = offset
+
+cdef class PidInfo:
+    cdef bint in_syscall
+    cdef int res_depth
+
+    def __init__(self):
+        self.in_syscall = 0
+        self.res_depth = 0
 
 cdef class AnnotatedEventsFromBuffer:
     cdef EventsFromBuffer raw_iter
     cdef int pid
-    cdef int res_depth
-    cdef bint in_syscall
+    cdef dict pid_infos
+    cdef PidInfo current_pid_info
 
     def __init__(self, buffer):
         self.raw_iter = EventsFromBuffer(buffer)
@@ -50,33 +59,43 @@ cdef class AnnotatedEventsFromBuffer:
     def __iter__(self):
         self.raw_iter.__iter__()
         self.pid = 0
-        self.res_depth = 0
-        self.in_syscall = 0
+        self.pid_infos = {}
+        self.current_pid_info = PidInfo()
         return self
 
     def __next__(self):
         while True:
             offset = self.raw_iter.offset
             event = self.raw_iter.__next__()
+            pid_info = self.current_pid_info
 
             if isinstance(event, EventPid):
+                self.pid_infos[self.pid] = self.current_pid_info
                 self.pid = event.pid
+                self.current_pid_info = self.pid_infos.get(self.pid)
+                if self.current_pid_info is None:
+                    self.current_pid_info = PidInfo()
                 continue
             elif isinstance(event, EventSyscallEnd):
-                self.in_syscall = False
+                pid_info.in_syscall = False
                 continue
             elif isinstance(event, EventResourceUnlock):
-                self.res_depth = self.res_depth - 1
-                assert self.res_depth >= 0
+                pid_info.res_depth = pid_info.res_depth - 1
+                assert pid_info.res_depth >= 0
                 continue
 
             event_info = EventInfo(pid = self.pid,
-                                   in_syscall = self.in_syscall,
+                                   in_syscall = pid_info.in_syscall,
+                                   res_depth = pid_info.res_depth,
                                    offset = offset)
 
             if isinstance(event, EventSyscall):
-                self.in_syscall = True
+                pid_info.in_syscall = True
             elif isinstance(event, EventResourceLock):
-                self.res_depth = self.res_depth + 1
+                pid_info.res_depth = pid_info.res_depth + 1
+            elif isinstance(event, EventQueueEof):
+                self.pid_infos[self.pid] = None
+                self.current_pid_info = PidInfo()
+                self.pid = 0
 
             return event_info, event
