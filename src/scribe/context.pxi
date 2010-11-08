@@ -80,8 +80,9 @@ cdef scribe_operations scribe_ops_with_init_loader = {
 
 
 class DivergeError(Exception):
-    def __init__(self, event, logfile,
+    def __init__(self, err, event, logfile,
                  backtrace_offsets, additional_trace=None):
+        self.err = err
         self.event = event
         self.logfile = logfile
         self.has_backtrace = backtrace_offsets is not None
@@ -124,7 +125,8 @@ class DivergeError(Exception):
             strs.append("Replay Diverged:")
             strs.append("  [%02d] %s" % (self.event.pid, self.event))
         else:
-            strs.append("Replay Diverged for unknown reason.")
+            strs.append("Replay Diverged, err = %d (%s)" %
+                        (self.err, os.strerror(self.err)))
         if self.additional_trace:
             strs.append("Additional trace:")
             for line in self.additional_trace.split('\n'):
@@ -197,13 +199,14 @@ cdef class Context:
             if err == -2 and errno == EINTR:
                 cpython.PyErr_CheckSignals()
                 continue
-            if errno == EDIVERGE:
+            if errno == EDIVERGE or self.log_offsets:
                 dmesg = None
                 if self.show_dmesg:
                     ps = subprocess.Popen('dmesg', stdout=subprocess.PIPE)
                     (dmesg, _) = ps.communicate()
                     dmesg = dmesg.decode()
-                raise DivergeError(event = self.diverge_event,
+                raise DivergeError(err = errno,
+                                   event = self.diverge_event,
                                    logfile = self.logfile,
                                    backtrace_offsets = self.log_offsets,
                                    additional_trace = dmesg)
