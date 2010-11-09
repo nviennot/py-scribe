@@ -25,6 +25,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_QUEUE_EOF
         SCRIBE_EVENT_RESOURCE_LOCK
         SCRIBE_EVENT_RESOURCE_UNLOCK
+        SCRIBE_EVENT_RDTSC
         # userspace -> kernel commands
         SCRIBE_EVENT_ATTACH_ON_EXECVE
         SCRIBE_EVENT_RECORD
@@ -91,6 +92,10 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_resource_unlock:
         scribe_event h
+
+    struct scribe_event_rdtsc:
+        scribe_event h
+        __u64 tsc
 
     struct scribe_event_attach_on_execve:
         scribe_event h

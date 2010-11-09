@@ -130,6 +130,13 @@ cdef class EventResourceLock(Event):
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, SCRIBE_EVENT_RESOURCE_UNLOCK)
 
+cdef class EventRdtsc(Event):
+    type = Event.register(EventRdtsc, SCRIBE_EVENT_RDTSC)
+
+    property tsc:
+        def __get__(self):
+            return (<scribe_event_rdtsc *>self.event_struct).tsc
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
