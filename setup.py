@@ -7,7 +7,6 @@ import glob
 
 scribe_src = sum((glob.glob('src/scribe/' + ext) \
                  for ext in '*.pyx *.pxd *.pxi'.split()), [])
-
 setup(
     name = 'Scribe',
     description = 'Scribe python bindings',
@@ -18,6 +17,7 @@ setup(
     ext_modules = [Extension('scribe',
                              extra_compile_args = ['-Wall', '-O2'],
                              sources = scribe_src,
+                             depends = ['/usr/include/linux/scribe_api.h'],
                              libraries = ['scribe'])],
     scripts=['src/record', 'src/replay', 'src/profiler']
 )
