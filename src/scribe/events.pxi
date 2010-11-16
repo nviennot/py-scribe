@@ -137,6 +137,19 @@ cdef class EventRdtsc(Event):
         def __get__(self):
             return (<scribe_event_rdtsc *>self.event_struct).tsc
 
+cdef class EventSignal(EventSized):
+    type = Event.register(EventSignal, SCRIBE_EVENT_SIGNAL)
+
+    property nr:
+        def __get__(self):
+            return (<scribe_event_signal *>self.event_struct).nr
+
+    property info:
+        def __get__(self):
+            return cpython.PyBytes_FromStringAndSize(
+                    <char *>(<scribe_event_signal *>self.event_struct).info,
+                    (<scribe_event_signal *>self.event_struct).h.size)
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
