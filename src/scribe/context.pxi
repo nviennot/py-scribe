@@ -9,6 +9,7 @@ import gc
 import pickle
 import traceback
 import mmap
+import signal
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
@@ -312,6 +313,8 @@ class Popen(subprocess.Popen, Context):
 
             if preexec_fn:
                 preexec_fn()
+
+            signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
             if env is None:
                 os.execvp(args[0], args)
