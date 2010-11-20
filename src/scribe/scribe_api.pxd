@@ -41,6 +41,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_DIVERGE_DATA_PTR
         SCRIBE_EVENT_DIVERGE_DATA_CONTENT
         SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE
+        SCRIBE_EVENT_DIVERGE_SYSCALL_RET
 
     struct scribe_event:
         __u8 type
@@ -152,6 +153,10 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_diverge_resource_type:
         scribe_event_diverge h
         __u8 type
+
+    struct scribe_event_diverge_syscall_ret:
+        scribe_event_diverge h
+        __u32 ret
 
     bint is_sized_type(int type)
     bint is_diverge_type(int type)

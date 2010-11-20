@@ -203,7 +203,10 @@ cdef class EventDivergeResourceType(EventDiverge):
     type = Event.register(EventDivergeResourceType,
                           SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE)
 
-    property resource_type:
+cdef class EventDivergeSyscallRet(EventDiverge):
+    type = Event.register(EventDivergeSyscallRet,
+                          SCRIBE_EVENT_DIVERGE_SYSCALL_RET)
+
+    property ret:
         def __get__(self):
-            return (<scribe_event_diverge_resource_type *>
-                    self.event_struct).type
+            return (<scribe_event_diverge_syscall_ret *> self.event_struct).ret
