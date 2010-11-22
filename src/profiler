@@ -13,18 +13,27 @@ def main():
                       action="store_false", dest="annotated", default=True,
                       help="Do not annotate the log file: "
                            "display the raw event stream")
+    parser.add_option("-p", "--pid", action="append", dest="pids",
+                      metavar='PID', type='int',
+                      help="Only show the given PID. --pid can be repeated.")
 
     (options, args) = parser.parse_args()
     if not args:
         parser.error('Give me a log file')
     if len(args) > 2:
         parser.error('You have extra arguments')
-    logfile = open(args[0], 'r+')
 
+    if not options.annotated and options.pids:
+        parser.error('You cannot filter by pid when parsing in raw format')
+
+    logfile = open(args[0], 'r+')
     logfile_map = mmap.mmap(logfile.fileno(), 0)
 
     if options.annotated:
+        pids = options.pids
         for info, event in scribe.AnnotatedEventsFromBuffer(logfile_map):
+            if pids and not info.pid in options.pids:
+                continue
             print("[%02d] %s%s%s" % (info.pid,
                                    ("", "    ")[info.in_syscall],
                                    "  " * info.res_depth,
