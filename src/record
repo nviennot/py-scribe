@@ -22,8 +22,11 @@ def main():
         parser.error('No command provided')
 
     if not options.logfile:
-        options.logfile = cmd[0] + '.log'
-    logfile = open(options.logfile, 'w+')
+        if options.shell:
+            options.logfile = 'sh.log'
+        else:
+            options.logfile = cmd[0] + '.log'
+    logfile = open(options.logfile, 'w')
 
     ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
     ps.wait()

@@ -98,7 +98,7 @@ class DivergeError(Exception):
             logfile_map = mmap.mmap(self.logfile.fileno(), 0,
                                     prot = mmap.PROT_READ)
         except:
-            strs.append("  Cannot mmap the logfile, no backtrace :(")
+            strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
         it = AnnotatedEventsFromBuffer(logfile_map)
