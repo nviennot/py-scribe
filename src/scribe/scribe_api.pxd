@@ -49,6 +49,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE
         SCRIBE_EVENT_DIVERGE_SYSCALL_RET
         SCRIBE_EVENT_DIVERGE_FENCE_SERIAL
+        SCRIBE_EVENT_DIVERGE_MEM_ADDRESS
 
     struct scribe_event:
         __u8 type
@@ -193,6 +194,10 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_diverge_fence_serial:
         scribe_event_diverge h
         __u32 serial
+
+    struct scribe_event_diverge_mem_address:
+        scribe_event_diverge h
+        __u32 address
 
     bint is_sized_type(int type)
     bint is_diverge_type(int type)
