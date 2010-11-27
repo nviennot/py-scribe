@@ -150,6 +150,52 @@ cdef class EventSignal(EventSized):
                     <char *>(<scribe_event_signal *>self.event_struct).info,
                     (<scribe_event_signal *>self.event_struct).h.size)
 
+cdef class EventFence(Event):
+    type = Event.register(EventFence, SCRIBE_EVENT_FENCE)
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_fence *>self.event_struct).serial
+
+cdef class EventMemOwnedRead(Event):
+    type = Event.register(EventMemOwnedRead, SCRIBE_EVENT_MEM_OWNED_READ)
+
+    property address:
+        def __get__(self):
+            return (<scribe_event_mem_owned_read *>self.event_struct).address
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_mem_owned_read *>self.event_struct).serial
+
+cdef class EventMemOwnedWrite(Event):
+    type = Event.register(EventMemOwnedWrite, SCRIBE_EVENT_MEM_OWNED_WRITE)
+
+    property address:
+        def __get__(self):
+            return (<scribe_event_mem_owned_write *>self.event_struct).address
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_mem_owned_write *>self.event_struct).serial
+
+cdef class EventMemPublicRead(Event):
+    type = Event.register(EventMemPublicRead, SCRIBE_EVENT_MEM_PUBLIC_READ)
+
+    property address:
+        def __get__(self):
+            return (<scribe_event_mem_public_read *>self.event_struct).address
+
+cdef class EventMemPublicWrite(Event):
+    type = Event.register(EventMemPublicWrite, SCRIBE_EVENT_MEM_PUBLIC_WRITE)
+
+    property address:
+        def __get__(self):
+            return (<scribe_event_mem_public_write *>self.event_struct).address
+
+cdef class EventMemAlone(Event):
+    type = Event.register(EventMemAlone, SCRIBE_EVENT_MEM_ALONE)
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
@@ -210,3 +256,12 @@ cdef class EventDivergeSyscallRet(EventDiverge):
     property ret:
         def __get__(self):
             return (<scribe_event_diverge_syscall_ret *> self.event_struct).ret
+
+cdef class EventDivergeFenceSerial(EventDiverge):
+    type = Event.register(EventDivergeFenceSerial,
+                          SCRIBE_EVENT_DIVERGE_FENCE_SERIAL)
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_diverge_fence_serial *>
+                        self.event_struct).serial
