@@ -266,11 +266,19 @@ cdef class EventDivergeFenceSerial(EventDiverge):
             return (<scribe_event_diverge_fence_serial *>
                         self.event_struct).serial
 
-cdef class EventDivergeMemAddress(EventDiverge):
-    type = Event.register(EventDivergeMemAddress,
-                          SCRIBE_EVENT_DIVERGE_MEM_ADDRESS)
+cdef class EventDivergeMemOwned(EventDiverge):
+    type = Event.register(EventDivergeMemOwned,
+                          SCRIBE_EVENT_DIVERGE_MEM_OWNED)
 
     property address:
         def __get__(self):
-            return (<scribe_event_diverge_mem_address *>
+            return (<scribe_event_diverge_mem_owned *>
                         self.event_struct).address
+    property write_access:
+        def __get__(self):
+            return (<scribe_event_diverge_mem_owned *>
+                        self.event_struct).write_access
+
+cdef class EventDivergeMemNotOwned(EventDiverge):
+    type = Event.register(EventDivergeMemNotOwned,
+                          SCRIBE_EVENT_DIVERGE_MEM_NOT_OWNED)
