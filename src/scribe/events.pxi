@@ -70,7 +70,12 @@ cdef class EventDiverge(Event):
 
     property pid:
         def __get__(self):
-            return (<scribe_event_pid *>self.event_struct).pid
+            return (<scribe_event_diverge *>self.event_struct).pid
+
+    property last_event_offset:
+        def __get__(self):
+            return (<scribe_event_diverge *>
+                        self.event_struct).last_event_offset
 
 cdef class EventInit(EventSized):
     type = Event.register(EventInit, SCRIBE_EVENT_INIT)
@@ -196,6 +201,9 @@ cdef class EventMemPublicWrite(Event):
 cdef class EventMemAlone(Event):
     type = Event.register(EventMemAlone, SCRIBE_EVENT_MEM_ALONE)
 
+cdef class EventRegs(Event):
+    type = Event.register(EventRegs, SCRIBE_EVENT_REGS)
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
@@ -249,6 +257,15 @@ cdef class EventDivergeResourceType(EventDiverge):
     type = Event.register(EventDivergeResourceType,
                           SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE)
 
+cdef class EventDivergeSyscall(EventDiverge):
+    type = Event.register(EventDivergeSyscall,
+                          SCRIBE_EVENT_DIVERGE_SYSCALL)
+
+    property nr:
+        def __get__(self):
+            return (<scribe_event_diverge_syscall *> self.event_struct).nr
+
+
 cdef class EventDivergeSyscallRet(EventDiverge):
     type = Event.register(EventDivergeSyscallRet,
                           SCRIBE_EVENT_DIVERGE_SYSCALL_RET)
@@ -282,3 +299,7 @@ cdef class EventDivergeMemOwned(EventDiverge):
 cdef class EventDivergeMemNotOwned(EventDiverge):
     type = Event.register(EventDivergeMemNotOwned,
                           SCRIBE_EVENT_DIVERGE_MEM_NOT_OWNED)
+
+cdef class EventDivergeRegs(EventDiverge):
+    type = Event.register(EventDivergeRegs,
+                          SCRIBE_EVENT_DIVERGE_REGS)

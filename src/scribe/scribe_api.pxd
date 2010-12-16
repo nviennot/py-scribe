@@ -13,6 +13,10 @@ cdef extern from "linux/types.h":
     ctypedef long __s64
     ctypedef int pid_t
 
+cdef extern from "asm/ptrace.h":
+    struct pt_regs:
+        pass
+
 cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
 
@@ -33,6 +37,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_MEM_PUBLIC_READ
         SCRIBE_EVENT_MEM_PUBLIC_WRITE
         SCRIBE_EVENT_MEM_ALONE
+        SCRIBE_EVENT_REGS
         # userspace -> kernel commands
         SCRIBE_EVENT_ATTACH_ON_EXECVE
         SCRIBE_EVENT_RECORD
@@ -47,10 +52,12 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_DIVERGE_DATA_PTR
         SCRIBE_EVENT_DIVERGE_DATA_CONTENT
         SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE
+        SCRIBE_EVENT_DIVERGE_SYSCALL
         SCRIBE_EVENT_DIVERGE_SYSCALL_RET
         SCRIBE_EVENT_DIVERGE_FENCE_SERIAL
         SCRIBE_EVENT_DIVERGE_MEM_OWNED
         SCRIBE_EVENT_DIVERGE_MEM_NOT_OWNED
+        SCRIBE_EVENT_DIVERGE_REGS
 
     struct scribe_event:
         __u8 type
@@ -62,6 +69,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_diverge:
         scribe_event h
         __u32 pid
+        __u64 last_event_offset
 
     struct scribe_event_init:
         scribe_event_sized h
@@ -138,6 +146,11 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_mem_alone:
         scribe_event h
 
+    struct scribe_event_regs:
+        scribe_event h
+        pt_regs regs
+
+
     struct scribe_event_attach_on_execve:
         scribe_event h
         __u8 enable
@@ -188,6 +201,10 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event_diverge h
         __u8 type
 
+    struct scribe_event_diverge_syscall:
+        scribe_event_diverge h
+        __u16 nr
+
     struct scribe_event_diverge_syscall_ret:
         scribe_event_diverge h
         __u32 ret
@@ -203,6 +220,10 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_diverge_mem_not_owned:
         scribe_event_diverge h
+
+    struct scribe_event_diverge_regs:
+        scribe_event_diverge h
+        pt_regs regs
 
     bint is_sized_type(int type)
     bint is_diverge_type(int type)

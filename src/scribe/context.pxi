@@ -124,7 +124,7 @@ class DivergeError(Exception):
             strs.extend(self._dump_backtrace())
         if self.event:
             strs.append("Replay Diverged:")
-            strs.append("  [%02d] %s" % (self.event.pid, self.event))
+            strs.append("  [%02d] diverged on %s" % (self.event.pid, self.event))
         else:
             strs.append("Replay Diverged, err = %d (%s)" %
                         (self.err, os.strerror(self.err)))
