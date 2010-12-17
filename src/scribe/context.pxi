@@ -153,13 +153,15 @@ cdef class Context:
 
         err = scribe_context_create(&self._ctx, ops, <void *>self)
         if err:
+            self._ctx = NULL
             raise OSError(errno, os.strerror(errno))
 
         self.logfile = logfile
         self.show_dmesg = show_dmesg
 
     def __del__(self):
-        scribe_context_destroy(self._ctx)
+        if self._ctx:
+            scribe_context_destroy(self._ctx)
 
     def record(self, args, env):
         cdef char **_args = NULL
