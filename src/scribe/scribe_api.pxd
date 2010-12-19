@@ -38,11 +38,15 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_MEM_PUBLIC_WRITE
         SCRIBE_EVENT_MEM_ALONE
         SCRIBE_EVENT_REGS
+        SCRIBE_EVENT_BOOKMARK
         # userspace -> kernel commands
         SCRIBE_EVENT_ATTACH_ON_EXECVE
         SCRIBE_EVENT_RECORD
         SCRIBE_EVENT_REPLAY
         SCRIBE_EVENT_STOP
+        SCRIBE_EVENT_BOOKMARK_REQUEST
+        SCRIBE_EVENT_GOLIVE_ON_NEXT_BOOKMARK
+        SCRIBE_EVENT_GOLIVE_ON_BOOKMARK_ID
         # kernel -> userspace notifications
         SCRIBE_EVENT_BACKTRACE
         SCRIBE_EVENT_CONTEXT_IDLE
@@ -150,6 +154,11 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event h
         pt_regs regs
 
+    struct scribe_event_bookmark:
+        scribe_event h
+        __u32 id
+        __u32 npr
+
 
     struct scribe_event_attach_on_execve:
         scribe_event h
@@ -166,6 +175,16 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_stop:
         scribe_event h
+
+    struct scribe_event_bookmark_request:
+        scribe_event h
+
+    struct scribe_event_golive_on_next_bookmark:
+        scribe_event h
+
+    struct scribe_event_golive_on_bookmark_id:
+        scribe_event h
+        __u32 id
 
     struct scribe_event_backtrace:
         scribe_event h
@@ -248,8 +267,10 @@ cdef extern from "scribe.h" nogil:
 
     pid_t scribe_record(scribe_context_t ctx, int flags, int log_fd,
                         char_p_const *argv, char_p_const *envp)
-    pid_t scribe_replay(scribe_context_t ctx, int flags, int log_fd, int backtrace_len)
+    pid_t scribe_replay(scribe_context_t ctx, int flags, int log_fd, int backtrace_len, int golive_bookmark_id)
     int scribe_wait(scribe_context_t ctx)
 
     int scribe_stop(scribe_context_t ctx)
+    int scribe_bookmark(scribe_context_t ctx)
+
     char *scribe_get_event_str(char *str, size_t size, scribe_event *event)

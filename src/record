@@ -1,7 +1,12 @@
 #!/usr/bin/python
 
 import scribe
+import signal
 from optparse import OptionParser
+
+# - Send a SIGUSR1 signal to stop the recording without aborting the recorded
+#   program.
+# - Send a SIGUSR2 signal to make a bookmark request.
 
 def main():
     usage = 'usage: %prog [options] command [argument ...]'
@@ -29,6 +34,14 @@ def main():
     logfile = open(options.logfile, 'w')
 
     ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
+
+    def sigusr1(signum, stack):
+        ps.stop()
+    def sigusr2(signum, stack):
+        ps.bookmark()
+    signal.signal(signal.SIGUSR1, sigusr1)
+    signal.signal(signal.SIGUSR2, sigusr2)
+
     ps.wait()
 
 if __name__ == '__main__':

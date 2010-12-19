@@ -204,6 +204,17 @@ cdef class EventMemAlone(Event):
 cdef class EventRegs(Event):
     type = Event.register(EventRegs, SCRIBE_EVENT_REGS)
 
+cdef class EventBookmark(Event):
+    type = Event.register(EventBookmark, SCRIBE_EVENT_BOOKMARK)
+
+    property id:
+        def __get__(self):
+            return (<scribe_event_bookmark *>self.event_struct).id
+
+    property npr:
+        def __get__(self):
+            return (<scribe_event_bookmark *>self.event_struct).npr
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)

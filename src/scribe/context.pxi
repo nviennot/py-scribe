@@ -184,12 +184,15 @@ cdef class Context:
             free(_args)
             free(_env)
 
-    def replay(self, backtrace_len=100):
+    def replay(self, backtrace_len=100, golive_bookmark_id=None):
         self.log_offsets = None
         self.diverge_event = None
         if self.show_dmesg:
             os.system('dmesg -c > /dev/null')
-        pid = scribe_replay(self._ctx, 0, self.logfile.fileno(), backtrace_len)
+        if golive_bookmark_id is None:
+            golive_bookmark_id = -1
+        pid = scribe_replay(self._ctx, 0, self.logfile.fileno(),
+                            backtrace_len, golive_bookmark_id)
         if pid < 0:
             raise OSError(errno, os.strerror(errno))
         return pid
@@ -215,6 +218,16 @@ cdef class Context:
                                    additional_trace = dmesg)
             raise OSError(errno, os.strerror(errno))
 
+    def stop(self):
+        err = scribe_stop(self._ctx)
+        if err:
+            raise OSError(errno, os.strerror(errno))
+
+    def bookmark(self):
+        err = scribe_bookmark(self._ctx)
+        if err:
+            raise OSError(errno, os.strerror(errno))
+
     def init_loader(self, argv, envp):
         pass
 
@@ -233,6 +246,7 @@ class Popen(subprocess.Popen, Context):
                  cwd=None, env=None, universal_newlines=False,
                  record=False, replay=False,
                  backtrace_len=100, show_dmesg=False,
+                 golive_bookmark_id=None,
                  startupinfo=None, creationflags=0):
         """ XXX close_fds=True by default
         """
@@ -249,6 +263,7 @@ class Popen(subprocess.Popen, Context):
 
         self.do_record = record
         self.backtrace_len = backtrace_len
+        self.golive_bookmark_id = golive_bookmark_id
 
         Context.__init__(self, logfile, has_init_loader = True,
                          show_dmesg=show_dmesg)
@@ -379,7 +394,8 @@ class Popen(subprocess.Popen, Context):
                     if self.do_record:
                         self.pid = self.record(args, env)
                     else:
-                        self.pid = self.replay(self.backtrace_len)
+                        self.pid = self.replay(self.backtrace_len,
+                                               self.golive_bookmark_id)
                 except:
                     if gc_was_enabled:
                         gc.enable()

@@ -3,7 +3,10 @@
 import scribe
 import sys
 import mmap
+import signal
 from optparse import OptionParser
+
+# Send a SIGUSR1 signal to go live when it can
 
 def main():
     usage = 'usage: %prog [options] log_file'
@@ -17,6 +20,9 @@ def main():
     parser.add_option("-d", "--dmesg",
                       action="store_true", dest="dmesg", default=False,
                       help="Show a dmesg trace if the replay diverges")
+    parser.add_option('-g', '--golive', dest='golive_bookmark_id',
+            metavar='BOOKMARK_ID', type='int', default=None,
+            help='Specify a specific bookmark to go live with')
 
     (options, args) = parser.parse_args()
     if not args:
@@ -26,7 +32,13 @@ def main():
     logfile = open(args[0], 'r')
 
     ps = scribe.Popen(logfile, replay = True, show_dmesg = options.dmesg,
-                      backtrace_len = options.backtrace_len)
+                      backtrace_len = options.backtrace_len,
+                      golive_bookmark_id = options.golive_bookmark_id)
+
+    def sigusr1(signum, stack):
+        ps.stop()
+    signal.signal(signal.SIGUSR1, sigusr1)
+
     ps.wait()
 
 if __name__ == '__main__':
