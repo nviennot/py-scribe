@@ -128,12 +128,20 @@ cdef class EventResourceLock(Event):
         def __get__(self):
             return (<scribe_event_resource_lock *>self.event_struct).type
 
+    property object:
+        def __get__(self):
+            return (<scribe_event_resource_lock *>self.event_struct).object
+
     property serial:
         def __get__(self):
             return (<scribe_event_resource_lock *>self.event_struct).serial
 
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, SCRIBE_EVENT_RESOURCE_UNLOCK)
+
+    property object:
+        def __get__(self):
+            return (<scribe_event_resource_lock *>self.event_struct).object
 
 cdef class EventRdtsc(Event):
     type = Event.register(EventRdtsc, SCRIBE_EVENT_RDTSC)
