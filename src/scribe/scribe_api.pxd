@@ -39,6 +39,8 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_MEM_ALONE
         SCRIBE_EVENT_REGS
         SCRIBE_EVENT_BOOKMARK
+        SCRIBE_EVENT_SIG_SEND_COOKIE
+        SCRIBE_EVENT_SIG_RECV_COOKIE
         # userspace -> kernel commands
         SCRIBE_EVENT_ATTACH_ON_EXECVE
         SCRIBE_EVENT_RECORD
@@ -160,6 +162,14 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event h
         __u32 id
         __u32 npr
+
+    struct scribe_event_sig_send_cookie:
+        scribe_event h
+        __u32 cookie
+
+    struct scribe_event_sig_recv_cookie:
+        scribe_event h
+        __u32 cookie
 
 
     struct scribe_event_attach_on_execve:

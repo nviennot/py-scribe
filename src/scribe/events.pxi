@@ -223,6 +223,20 @@ cdef class EventBookmark(Event):
         def __get__(self):
             return (<scribe_event_bookmark *>self.event_struct).npr
 
+cdef class EventSigSendCookie(Event):
+    type = Event.register(EventSigSendCookie, SCRIBE_EVENT_SIG_SEND_COOKIE)
+
+    property cookie:
+        def __get__(self):
+            return (<scribe_event_sig_send_cookie *>self.event_struct).cookie
+
+cdef class EventSigRecvCookie(Event):
+    type = Event.register(EventSigRecvCookie, SCRIBE_EVENT_SIG_RECV_COOKIE)
+
+    property cookie:
+        def __get__(self):
+            return (<scribe_event_sig_recv_cookie *>self.event_struct).cookie
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
