@@ -127,6 +127,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_signal:
         scribe_event_sized h
         __u8 nr
+        __u8 deferred
         __u8 info[0]
 
     struct scribe_event_fence:

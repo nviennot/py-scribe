@@ -157,6 +157,10 @@ cdef class EventSignal(EventSized):
         def __get__(self):
             return (<scribe_event_signal *>self.event_struct).nr
 
+    property deferred:
+        def __get__(self):
+            return (<scribe_event_signal *>self.event_struct).deferred
+
     property info:
         def __get__(self):
             return cpython.PyBytes_FromStringAndSize(
