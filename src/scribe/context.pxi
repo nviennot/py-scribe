@@ -163,7 +163,7 @@ cdef class Context:
         if self._ctx:
             scribe_context_destroy(self._ctx)
 
-    def record(self, args, env):
+    def record(self, args, env, flags=SCRIBE_DEFAULT):
         cdef char **_args = NULL
         cdef char **_env = NULL
 
@@ -176,7 +176,8 @@ cdef class Context:
             if env is not None:
                 _env = list_to_pstr(benv)
 
-            pid = scribe_record(self._ctx, 0, self.logfile.fileno(), _args, _env)
+            pid = scribe_record(self._ctx, flags,
+                                self.logfile.fileno(), _args, _env)
             if pid < 0:
                 raise OSError(errno, os.strerror(errno))
             return pid
@@ -247,6 +248,7 @@ class Popen(subprocess.Popen, Context):
                  record=False, replay=False,
                  backtrace_len=100, show_dmesg=False,
                  golive_bookmark_id=None,
+                 flags=SCRIBE_DEFAULT,
                  startupinfo=None, creationflags=0):
         """ XXX close_fds=True by default
         """
@@ -264,6 +266,7 @@ class Popen(subprocess.Popen, Context):
         self.do_record = record
         self.backtrace_len = backtrace_len
         self.golive_bookmark_id = golive_bookmark_id
+        self.flags = flags
 
         Context.__init__(self, logfile, has_init_loader = True,
                          show_dmesg=show_dmesg)
@@ -392,7 +395,7 @@ class Popen(subprocess.Popen, Context):
                 gc.disable()
                 try:
                     if self.do_record:
-                        self.pid = self.record(args, env)
+                        self.pid = self.record(args, env, self.flags)
                     else:
                         self.pid = self.replay(self.backtrace_len,
                                                self.golive_bookmark_id)

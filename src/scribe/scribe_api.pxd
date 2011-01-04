@@ -20,6 +20,41 @@ cdef extern from "asm/ptrace.h":
 cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
 
+    enum: SCRIBE_REGS
+    enum: SCRIBE_DATA_DET
+    enum: SCRIBE_DATA_EXTRA
+    enum: SCRIBE_RES_EXTRA
+    enum: SCRIBE_SIG_COOKIE
+    enum: SCRIBE_ALL
+    enum: SCRIBE_DEFAULT
+
+    enum: SCRIBE_PS_RECORD
+    enum: SCRIBE_PS_REPLAY
+    enum: SCRIBE_PS_ATTACH_ON_EXEC
+    enum: SCRIBE_PS_DETACHING
+    enum: SCRIBE_PS_ENABLE_SYSCALL
+    enum: SCRIBE_PS_ENABLE_DATA
+    enum: SCRIBE_PS_ENABLE_RESOURCE
+    enum: SCRIBE_PS_ENABLE_SIGNAL
+    enum: SCRIBE_PS_ENABLE_TSC
+    enum: SCRIBE_PS_ENABLE_MM
+    enum: SCRIBE_PS_ENABLE_ALL
+
+    enum: SCRIBE_DATA_INPUT
+    enum: SCRIBE_DATA_STRING
+    enum: SCRIBE_DATA_NON_DETERMINISTIC
+    enum: SCRIBE_DATA_INTERNAL
+    enum: SCRIBE_DATA_ZERO
+
+    enum: SCRIBE_RES_TYPE_RESERVED
+    enum: SCRIBE_RES_TYPE_INODE
+    enum: SCRIBE_RES_TYPE_FILE
+    enum: SCRIBE_RES_TYPE_FILES_STRUCT
+    enum: SCRIBE_RES_TYPE_TASK
+    enum: SCRIBE_RES_TYPE_FUTEX
+    enum: SCRIBE_RES_TYPE_SPINLOCK
+    enum: SCRIBE_RES_TYPE_REGISTRATION
+
     enum scribe_event_type:
         SCRIBE_EVENT_INIT
         SCRIBE_EVENT_PID
@@ -88,11 +123,6 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_pid:
         scribe_event h
         __u32 pid
-
-    enum: SCRIBE_DATA_INPUT
-    enum: SCRIBE_DATA_STRING
-    enum: SCRIBE_DATA_NON_DETERMINISTIC
-    enum: SCRIBE_DATA_INTERNAL
 
     struct scribe_event_data:
         scribe_event_sized h

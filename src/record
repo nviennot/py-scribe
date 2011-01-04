@@ -16,7 +16,11 @@ def main():
     parser = OptionParser(usage=usage, description=desc)
 
     parser.add_option('-o', '--output', dest='logfile', metavar='FILE',
-            help='Write the recorded execution to FILE.')
+           help='Write the recorded execution to FILE.')
+    parser.add_option('-l', '--log-verbosity', dest='log_verbosity',
+            metavar='VERBOSITY', type='int', default=-1,
+            help='Specify the verbosity of the recording in the log file. ' \
+                 '0 results in a minimal log file, 15 is the opposite.')
     parser.add_option("-s", "--shell",
                       action="store_true", dest="shell", default=False,
                       help="Run the command through the shell")
@@ -33,7 +37,12 @@ def main():
             options.logfile = cmd[0] + '.log'
     logfile = open(options.logfile, 'w')
 
-    ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
+    if options.log_verbosity == -1:
+        ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
+    else:
+        flags = (1 << options.log_verbosity)-1
+        ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
+                          flags = flags)
 
     def sigusr1(signum, stack):
         ps.stop()
