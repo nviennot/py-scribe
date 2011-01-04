@@ -21,13 +21,15 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
 
     enum scribe_event_type:
-        SCRIBE_EVENT_INIT = 1
+        SCRIBE_EVENT_INIT
         SCRIBE_EVENT_PID
         SCRIBE_EVENT_DATA
+        SCRIBE_EVENT_DATA_EXTRA
         SCRIBE_EVENT_SYSCALL
         SCRIBE_EVENT_SYSCALL_END
         SCRIBE_EVENT_QUEUE_EOF
         SCRIBE_EVENT_RESOURCE_LOCK
+        SCRIBE_EVENT_RESOURCE_LOCK_EXTRA
         SCRIBE_EVENT_RESOURCE_UNLOCK
         SCRIBE_EVENT_RDTSC
         SCRIBE_EVENT_SIGNAL
@@ -94,6 +96,11 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_data:
         scribe_event_sized h
+        __u8 data[0]
+        __u32 ldata[0]
+
+    struct scribe_event_data_extra:
+        scribe_event_sized h
         __u32 user_ptr
         __u8 data_type
         __u8 data[0]
@@ -111,6 +118,10 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event h
 
     struct scribe_event_resource_lock:
+        scribe_event h
+        __u32 serial
+
+    struct scribe_event_resource_lock_extra:
         scribe_event h
         __u8 type
         __u32 object

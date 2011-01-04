@@ -90,19 +90,28 @@ cdef class EventPid(Event):
 cdef class EventData(EventSized):
     type = Event.register(EventData, SCRIBE_EVENT_DATA)
 
-    property user_ptr:
-        def __get__(self):
-            return (<scribe_event_data *>self.event_struct).user_ptr
-
-    property data_type:
-        def __get__(self):
-            return (<scribe_event_data *>self.event_struct).data_type
-
     property data:
         def __get__(self):
             return cpython.PyBytes_FromStringAndSize(
                     <char *>(<scribe_event_data *>self.event_struct).data,
                     (<scribe_event_data *>self.event_struct).h.size)
+
+cdef class EventDataExtra(EventSized):
+    type = Event.register(EventDataExtra, SCRIBE_EVENT_DATA_EXTRA)
+
+    property user_ptr:
+        def __get__(self):
+            return (<scribe_event_data_extra *>self.event_struct).user_ptr
+
+    property data_type:
+        def __get__(self):
+            return (<scribe_event_data_extra *>self.event_struct).data_type
+
+    property data:
+        def __get__(self):
+            return cpython.PyBytes_FromStringAndSize(
+                    <char *>(<scribe_event_data_extra *>self.event_struct).data,
+                    (<scribe_event_data_extra *>self.event_struct).h.size)
 
 cdef class EventSyscall(Event):
     type = Event.register(EventSyscall, SCRIBE_EVENT_SYSCALL)
@@ -124,24 +133,32 @@ cdef class EventQueueEof(Event):
 cdef class EventResourceLock(Event):
     type = Event.register(EventResourceLock, SCRIBE_EVENT_RESOURCE_LOCK)
 
-    property resource_type:
-        def __get__(self):
-            return (<scribe_event_resource_lock *>self.event_struct).type
-
-    property object:
-        def __get__(self):
-            return (<scribe_event_resource_lock *>self.event_struct).object
-
     property serial:
         def __get__(self):
             return (<scribe_event_resource_lock *>self.event_struct).serial
+
+cdef class EventResourceLockExtra(Event):
+    type = Event.register(EventResourceLockExtra,
+                          SCRIBE_EVENT_RESOURCE_LOCK_EXTRA)
+
+    property resource_type:
+        def __get__(self):
+            return (<scribe_event_resource_lock_extra *>self.event_struct).type
+
+    property object:
+        def __get__(self):
+            return (<scribe_event_resource_lock_extra *>self.event_struct).object
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_resource_lock_extra *>self.event_struct).serial
 
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, SCRIBE_EVENT_RESOURCE_UNLOCK)
 
     property object:
         def __get__(self):
-            return (<scribe_event_resource_lock *>self.event_struct).object
+            return (<scribe_event_resource_unlock *>self.event_struct).object
 
 cdef class EventRdtsc(Event):
     type = Event.register(EventRdtsc, SCRIBE_EVENT_RDTSC)
