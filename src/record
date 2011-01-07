@@ -40,7 +40,7 @@ def main():
     if options.log_verbosity == -1:
         ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
     else:
-        flags = (1 << options.log_verbosity)-1
+        flags = ((1 << options.log_verbosity)-1) << 8
         ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
                           flags = flags)
 
