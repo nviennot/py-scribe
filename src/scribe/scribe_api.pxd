@@ -20,6 +20,7 @@ cdef extern from "asm/ptrace.h":
 cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
 
+    enum: SCRIBE_SYSCALL_RET
     enum: SCRIBE_SYSCALL_EXTRA
     enum: SCRIBE_SIG_COOKIE
     enum: SCRIBE_RES_EXTRA
@@ -27,14 +28,6 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_DATA_DET
     enum: SCRIBE_FENCE_ALWAYS
     enum: SCRIBE_REGS
-    enum: SCRIBE_ALL
-    enum: SCRIBE_DEFAULT
-
-    enum: SCRIBE_REGS
-    enum: SCRIBE_DATA_DET
-    enum: SCRIBE_DATA_EXTRA
-    enum: SCRIBE_RES_EXTRA
-    enum: SCRIBE_SIG_COOKIE
     enum: SCRIBE_ALL
     enum: SCRIBE_DEFAULT
 
