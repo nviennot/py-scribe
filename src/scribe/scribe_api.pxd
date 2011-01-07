@@ -75,6 +75,8 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_FENCE
         SCRIBE_EVENT_MEM_OWNED_READ
         SCRIBE_EVENT_MEM_OWNED_WRITE
+        SCRIBE_EVENT_MEM_OWNED_READ_EXTRA
+        SCRIBE_EVENT_MEM_OWNED_WRITE_EXTRA
         SCRIBE_EVENT_MEM_PUBLIC_READ
         SCRIBE_EVENT_MEM_PUBLIC_WRITE
         SCRIBE_EVENT_MEM_ALONE
@@ -185,10 +187,18 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_mem_owned_read:
         scribe_event h
-        __u32 address
         __u32 serial
 
     struct scribe_event_mem_owned_write:
+        scribe_event h
+        __u32 serial
+
+    struct scribe_event_mem_owned_read_extra:
+        scribe_event h
+        __u32 address
+        __u32 serial
+
+    struct scribe_event_mem_owned_write_extra:
         scribe_event h
         __u32 address
         __u32 serial

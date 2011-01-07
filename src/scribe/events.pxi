@@ -201,10 +201,6 @@ cdef class EventFence(Event):
 cdef class EventMemOwnedRead(Event):
     type = Event.register(EventMemOwnedRead, SCRIBE_EVENT_MEM_OWNED_READ)
 
-    property address:
-        def __get__(self):
-            return (<scribe_event_mem_owned_read *>self.event_struct).address
-
     property serial:
         def __get__(self):
             return (<scribe_event_mem_owned_read *>self.event_struct).serial
@@ -212,13 +208,37 @@ cdef class EventMemOwnedRead(Event):
 cdef class EventMemOwnedWrite(Event):
     type = Event.register(EventMemOwnedWrite, SCRIBE_EVENT_MEM_OWNED_WRITE)
 
-    property address:
-        def __get__(self):
-            return (<scribe_event_mem_owned_write *>self.event_struct).address
-
     property serial:
         def __get__(self):
             return (<scribe_event_mem_owned_write *>self.event_struct).serial
+
+cdef class EventMemOwnedReadExtra(Event):
+    type = Event.register(EventMemOwnedReadExtra,
+                          SCRIBE_EVENT_MEM_OWNED_READ_EXTRA)
+
+    property address:
+        def __get__(self):
+            return (<scribe_event_mem_owned_read_extra *>
+                    self.event_struct).address
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_mem_owned_read_extra *>
+                    self.event_struct).serial
+
+cdef class EventMemOwnedWriteExtra(Event):
+    type = Event.register(EventMemOwnedWriteExtra,
+                          SCRIBE_EVENT_MEM_OWNED_WRITE_EXTRA)
+
+    property address:
+        def __get__(self):
+            return (<scribe_event_mem_owned_write_extra *>
+                    self.event_struct).address
+
+    property serial:
+        def __get__(self):
+            return (<scribe_event_mem_owned_write_extra *>
+                    self.event_struct).serial
 
 cdef class EventMemPublicRead(Event):
     type = Event.register(EventMemPublicRead, SCRIBE_EVENT_MEM_PUBLIC_READ)
