@@ -20,6 +20,16 @@ cdef extern from "asm/ptrace.h":
 cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
 
+    enum: SCRIBE_SYSCALL_EXTRA
+    enum: SCRIBE_SIG_COOKIE
+    enum: SCRIBE_RES_EXTRA
+    enum: SCRIBE_DATA_EXTRA
+    enum: SCRIBE_DATA_DET
+    enum: SCRIBE_FENCE_ALWAYS
+    enum: SCRIBE_REGS
+    enum: SCRIBE_ALL
+    enum: SCRIBE_DEFAULT
+
     enum: SCRIBE_REGS
     enum: SCRIBE_DATA_DET
     enum: SCRIBE_DATA_EXTRA
@@ -61,6 +71,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_DATA
         SCRIBE_EVENT_DATA_EXTRA
         SCRIBE_EVENT_SYSCALL
+        SCRIBE_EVENT_SYSCALL_EXTRA
         SCRIBE_EVENT_SYSCALL_END
         SCRIBE_EVENT_QUEUE_EOF
         SCRIBE_EVENT_RESOURCE_LOCK
@@ -137,6 +148,10 @@ cdef extern from "linux/scribe_api.h" nogil:
         __u32 ldata[0]
 
     struct scribe_event_syscall:
+        scribe_event h
+        __u32 ret
+
+    struct scribe_event_syscall_extra:
         scribe_event h
         __u32 ret
         __u16 nr

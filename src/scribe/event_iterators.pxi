@@ -89,7 +89,7 @@ cdef class AnnotatedEventsFromBuffer:
                                    res_depth = pid_info.res_depth,
                                    offset = offset)
 
-            if isinstance(event, EventSyscall):
+            if isinstance(event, EventSyscallExtra):
                 pid_info.in_syscall = True
             elif isinstance(event, EventResourceLockExtra):
                 pid_info.res_depth = pid_info.res_depth + 1

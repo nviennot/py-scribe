@@ -120,9 +120,16 @@ cdef class EventSyscall(Event):
         def __get__(self):
             return (<scribe_event_syscall *>self.event_struct).ret
 
+cdef class EventSyscallExtra(Event):
+    type = Event.register(EventSyscallExtra, SCRIBE_EVENT_SYSCALL_EXTRA)
+
+    property ret:
+        def __get__(self):
+            return (<scribe_event_syscall_extra *>self.event_struct).ret
+
     property nr:
         def __get__(self):
-            return (<scribe_event_syscall *>self.event_struct).nr
+            return (<scribe_event_syscall_extra *>self.event_struct).nr
 
 cdef class EventSyscallEnd(Event):
     type = Event.register(EventSyscallEnd, SCRIBE_EVENT_SYSCALL_END)
