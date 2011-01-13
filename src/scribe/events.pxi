@@ -162,6 +162,10 @@ cdef class EventResourceLock(Event):
         def __set__(self, value):
             (<scribe_event_resource_lock *>self.event_struct).serial = value
 
+cdef class EventResourceLockIntr(Event):
+    type = Event.register(EventResourceLockIntr,
+                          SCRIBE_EVENT_RESOURCE_LOCK_INTR)
+
 cdef class EventResourceLockExtra(Event):
     type = Event.register(EventResourceLockExtra,
                           SCRIBE_EVENT_RESOURCE_LOCK_EXTRA)

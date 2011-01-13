@@ -69,6 +69,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_SYSCALL_END
         SCRIBE_EVENT_QUEUE_EOF
         SCRIBE_EVENT_RESOURCE_LOCK
+        SCRIBE_EVENT_RESOURCE_LOCK_INTR
         SCRIBE_EVENT_RESOURCE_LOCK_EXTRA
         SCRIBE_EVENT_RESOURCE_UNLOCK
         SCRIBE_EVENT_RDTSC
@@ -161,6 +162,9 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_resource_lock:
         scribe_event h
         __u32 serial
+
+    struct scribe_event_resource_lock_intr:
+        scribe_event h
 
     struct scribe_event_resource_lock_extra:
         scribe_event h
