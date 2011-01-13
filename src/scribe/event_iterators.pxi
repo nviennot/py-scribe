@@ -1,18 +1,44 @@
 from scribe_api cimport *
 cimport cpython
 
+class EventInfo:
+    def __init__(self, pid, in_syscall, res_depth, offset):
+        self.pid = pid
+        self.in_syscall = in_syscall
+        self.res_depth = res_depth
+        self.offset = offset
+
+cdef class PidInfo:
+    cdef bint in_syscall
+    cdef int res_depth
+
+    def __init__(self):
+        self.in_syscall = 0
+        self.res_depth = 0
+
 cdef class EventsFromBuffer:
     cdef object buffer
-    cdef loff_t offset
+    cdef bint do_info
+    cdef bint remove_annotations
 
-    def __init__(self, buffer):
+    cdef loff_t offset
+    cdef int pid
+    cdef dict pid_infos
+    cdef PidInfo current_pid_info
+
+    def __init__(self, buffer, do_info=True, remove_annotations=True):
         self.buffer = buffer
+        self.do_info = do_info
+        self.remove_annotations = remove_annotations
 
     def __iter__(self):
         self.offset = 0
+        self.pid = 0
+        self.pid_infos = {}
+        self.current_pid_info = PidInfo()
         return self
 
-    def __next__(self):
+    cdef _next_raw(self):
         if self.offset >= len(self.buffer):
             raise StopIteration
 
@@ -32,41 +58,10 @@ cdef class EventsFromBuffer:
         self.offset += size + extra_size
         return event
 
-class EventInfo:
-    def __init__(self, pid, in_syscall, res_depth, offset):
-        self.pid = pid
-        self.in_syscall = in_syscall
-        self.res_depth = res_depth
-        self.offset = offset
-
-cdef class PidInfo:
-    cdef bint in_syscall
-    cdef int res_depth
-
-    def __init__(self):
-        self.in_syscall = 0
-        self.res_depth = 0
-
-cdef class AnnotatedEventsFromBuffer:
-    cdef EventsFromBuffer raw_iter
-    cdef int pid
-    cdef dict pid_infos
-    cdef PidInfo current_pid_info
-
-    def __init__(self, buffer):
-        self.raw_iter = EventsFromBuffer(buffer)
-
-    def __iter__(self):
-        self.raw_iter.__iter__()
-        self.pid = 0
-        self.pid_infos = {}
-        self.current_pid_info = PidInfo()
-        return self
-
-    def __next__(self):
+    cdef _next_info(self):
         while True:
-            offset = self.raw_iter.offset
-            event = self.raw_iter.__next__()
+            offset = self.offset
+            event = self._next_raw()
             pid_info = self.current_pid_info
 
             if isinstance(event, EventPid):
@@ -75,14 +70,18 @@ cdef class AnnotatedEventsFromBuffer:
                 self.current_pid_info = self.pid_infos.get(self.pid)
                 if self.current_pid_info is None:
                     self.current_pid_info = PidInfo()
-                continue
+
+                if self.remove_annotations:
+                    continue
             elif isinstance(event, EventSyscallEnd):
                 pid_info.in_syscall = False
-                continue
+                if self.remove_annotations:
+                    continue
             elif isinstance(event, EventResourceUnlock):
                 pid_info.res_depth = pid_info.res_depth - 1
                 assert pid_info.res_depth >= 0
-                continue
+                if self.remove_annotations:
+                    continue
 
             event_info = EventInfo(pid = self.pid,
                                    in_syscall = pid_info.in_syscall,
@@ -99,3 +98,8 @@ cdef class AnnotatedEventsFromBuffer:
                 self.pid = 0
 
             return event_info, event
+
+    def __next__(self):
+        if self.do_info:
+            return self._next_info()
+        return self._next_raw()

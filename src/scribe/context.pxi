@@ -101,7 +101,7 @@ class DivergeError(Exception):
             strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
-        it = AnnotatedEventsFromBuffer(logfile_map)
+        it = EventsFromBuffer(logfile_map)
         events = dict((info.offset, (info, event)) for info, event in it if
                       info.offset in self.backtrace_offsets)
         for offset in self.backtrace_offsets:

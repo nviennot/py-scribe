@@ -31,7 +31,7 @@ def main():
 
     if options.annotated:
         pids = options.pids
-        for info, event in scribe.AnnotatedEventsFromBuffer(logfile_map):
+        for info, event in scribe.EventsFromBuffer(logfile_map):
             if pids and not info.pid in options.pids:
                 continue
             print("[%02d] %s%s%s" % (info.pid,
@@ -39,7 +39,7 @@ def main():
                                    "  " * info.res_depth,
                                    event))
     else:
-        for event in scribe.EventsFromBuffer(logfile_map):
+        for event in scribe.EventsFromBuffer(logfile_map, do_info=False):
             print(event)
 
 if __name__ == '__main__':
