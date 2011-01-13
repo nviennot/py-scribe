@@ -71,11 +71,15 @@ cdef class EventDiverge(Event):
     property pid:
         def __get__(self):
             return (<scribe_event_diverge *>self.event_struct).pid
+        def __set__(self, value):
+            (<scribe_event_diverge *>self.event_struct).pid = value
 
     property last_event_offset:
         def __get__(self):
             return (<scribe_event_diverge *>
                         self.event_struct).last_event_offset
+        def __set__(self, value):
+            (<scribe_event_diverge *>self.event_struct).last_event_offset = value
 
 cdef class EventInit(EventSized):
     type = Event.register(EventInit, SCRIBE_EVENT_INIT)
@@ -86,6 +90,8 @@ cdef class EventPid(Event):
     property pid:
         def __get__(self):
             return (<scribe_event_pid *>self.event_struct).pid
+        def __set__(self, value):
+            (<scribe_event_pid *>self.event_struct).pid = value
 
 cdef class EventData(EventSized):
     type = Event.register(EventData, SCRIBE_EVENT_DATA)
@@ -102,10 +108,14 @@ cdef class EventDataExtra(EventSized):
     property user_ptr:
         def __get__(self):
             return (<scribe_event_data_extra *>self.event_struct).user_ptr
+        def __set__(self, value):
+            (<scribe_event_data_extra *>self.event_struct).user_ptr = value
 
     property data_type:
         def __get__(self):
             return (<scribe_event_data_extra *>self.event_struct).data_type
+        def __set__(self, value):
+            (<scribe_event_data_extra *>self.event_struct).data_type = value
 
     property data:
         def __get__(self):
@@ -119,6 +129,8 @@ cdef class EventSyscall(Event):
     property ret:
         def __get__(self):
             return (<scribe_event_syscall *>self.event_struct).ret
+        def __set__(self, value):
+            (<scribe_event_syscall *>self.event_struct).ret = value
 
 cdef class EventSyscallExtra(Event):
     type = Event.register(EventSyscallExtra, SCRIBE_EVENT_SYSCALL_EXTRA)
@@ -126,10 +138,14 @@ cdef class EventSyscallExtra(Event):
     property ret:
         def __get__(self):
             return (<scribe_event_syscall_extra *>self.event_struct).ret
+        def __set__(self, value):
+            (<scribe_event_syscall_extra *>self.event_struct).ret = value
 
     property nr:
         def __get__(self):
             return (<scribe_event_syscall_extra *>self.event_struct).nr
+        def __set__(self, value):
+            (<scribe_event_syscall_extra *>self.event_struct).nr = value
 
 cdef class EventSyscallEnd(Event):
     type = Event.register(EventSyscallEnd, SCRIBE_EVENT_SYSCALL_END)
@@ -143,6 +159,8 @@ cdef class EventResourceLock(Event):
     property serial:
         def __get__(self):
             return (<scribe_event_resource_lock *>self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_resource_lock *>self.event_struct).serial = value
 
 cdef class EventResourceLockExtra(Event):
     type = Event.register(EventResourceLockExtra,
@@ -151,14 +169,20 @@ cdef class EventResourceLockExtra(Event):
     property resource_type:
         def __get__(self):
             return (<scribe_event_resource_lock_extra *>self.event_struct).type
+        def __set__(self, value):
+            (<scribe_event_resource_lock_extra *>self.event_struct).type = value
 
     property object:
         def __get__(self):
             return (<scribe_event_resource_lock_extra *>self.event_struct).object
+        def __set__(self, value):
+            (<scribe_event_resource_lock_extra *>self.event_struct).object = value
 
     property serial:
         def __get__(self):
             return (<scribe_event_resource_lock_extra *>self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_resource_lock_extra *>self.event_struct).serial = value
 
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, SCRIBE_EVENT_RESOURCE_UNLOCK)
@@ -166,6 +190,8 @@ cdef class EventResourceUnlock(Event):
     property object:
         def __get__(self):
             return (<scribe_event_resource_unlock *>self.event_struct).object
+        def __set__(self, value):
+            (<scribe_event_resource_unlock *>self.event_struct).object = value
 
 cdef class EventRdtsc(Event):
     type = Event.register(EventRdtsc, SCRIBE_EVENT_RDTSC)
@@ -173,6 +199,8 @@ cdef class EventRdtsc(Event):
     property tsc:
         def __get__(self):
             return (<scribe_event_rdtsc *>self.event_struct).tsc
+        def __set__(self, value):
+            (<scribe_event_rdtsc *>self.event_struct).tsc = value
 
 cdef class EventSignal(EventSized):
     type = Event.register(EventSignal, SCRIBE_EVENT_SIGNAL)
@@ -180,10 +208,14 @@ cdef class EventSignal(EventSized):
     property nr:
         def __get__(self):
             return (<scribe_event_signal *>self.event_struct).nr
+        def __set__(self, value):
+            (<scribe_event_signal *>self.event_struct).nr = value
 
     property deferred:
         def __get__(self):
             return (<scribe_event_signal *>self.event_struct).deferred
+        def __set__(self, value):
+            (<scribe_event_signal *>self.event_struct).deferred = value
 
     property info:
         def __get__(self):
@@ -197,6 +229,8 @@ cdef class EventFence(Event):
     property serial:
         def __get__(self):
             return (<scribe_event_fence *>self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_fence *>self.event_struct).serial = value
 
 cdef class EventMemOwnedRead(Event):
     type = Event.register(EventMemOwnedRead, SCRIBE_EVENT_MEM_OWNED_READ)
@@ -204,6 +238,8 @@ cdef class EventMemOwnedRead(Event):
     property serial:
         def __get__(self):
             return (<scribe_event_mem_owned_read *>self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_mem_owned_read *>self.event_struct).serial = value
 
 cdef class EventMemOwnedWrite(Event):
     type = Event.register(EventMemOwnedWrite, SCRIBE_EVENT_MEM_OWNED_WRITE)
@@ -211,6 +247,8 @@ cdef class EventMemOwnedWrite(Event):
     property serial:
         def __get__(self):
             return (<scribe_event_mem_owned_write *>self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_mem_owned_write *>self.event_struct).serial = value
 
 cdef class EventMemOwnedReadExtra(Event):
     type = Event.register(EventMemOwnedReadExtra,
@@ -220,11 +258,17 @@ cdef class EventMemOwnedReadExtra(Event):
         def __get__(self):
             return (<scribe_event_mem_owned_read_extra *>
                     self.event_struct).address
+        def __set__(self, value):
+            (<scribe_event_mem_owned_read_extra *>
+                    self.event_struct).address = value
 
     property serial:
         def __get__(self):
             return (<scribe_event_mem_owned_read_extra *>
                     self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_mem_owned_read_extra *>
+                    self.event_struct).serial = value
 
 cdef class EventMemOwnedWriteExtra(Event):
     type = Event.register(EventMemOwnedWriteExtra,
@@ -234,11 +278,17 @@ cdef class EventMemOwnedWriteExtra(Event):
         def __get__(self):
             return (<scribe_event_mem_owned_write_extra *>
                     self.event_struct).address
+        def __set__(self, value):
+            (<scribe_event_mem_owned_write_extra *>
+                    self.event_struct).address = value
 
     property serial:
         def __get__(self):
             return (<scribe_event_mem_owned_write_extra *>
                     self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_mem_owned_write_extra *>
+                    self.event_struct).serial = value
 
 cdef class EventMemPublicRead(Event):
     type = Event.register(EventMemPublicRead, SCRIBE_EVENT_MEM_PUBLIC_READ)
@@ -246,6 +296,8 @@ cdef class EventMemPublicRead(Event):
     property address:
         def __get__(self):
             return (<scribe_event_mem_public_read *>self.event_struct).address
+        def __set__(self, value):
+            (<scribe_event_mem_public_read *>self.event_struct).address = value
 
 cdef class EventMemPublicWrite(Event):
     type = Event.register(EventMemPublicWrite, SCRIBE_EVENT_MEM_PUBLIC_WRITE)
@@ -253,6 +305,8 @@ cdef class EventMemPublicWrite(Event):
     property address:
         def __get__(self):
             return (<scribe_event_mem_public_write *>self.event_struct).address
+        def __set__(self, value):
+            (<scribe_event_mem_public_write *>self.event_struct).address = value
 
 cdef class EventMemAlone(Event):
     type = Event.register(EventMemAlone, SCRIBE_EVENT_MEM_ALONE)
@@ -266,10 +320,14 @@ cdef class EventBookmark(Event):
     property id:
         def __get__(self):
             return (<scribe_event_bookmark *>self.event_struct).id
+        def __set__(self, value):
+            (<scribe_event_bookmark *>self.event_struct).id = value
 
     property npr:
         def __get__(self):
             return (<scribe_event_bookmark *>self.event_struct).npr
+        def __set__(self, value):
+            (<scribe_event_bookmark *>self.event_struct).npr = value
 
 cdef class EventSigSendCookie(Event):
     type = Event.register(EventSigSendCookie, SCRIBE_EVENT_SIG_SEND_COOKIE)
@@ -277,6 +335,8 @@ cdef class EventSigSendCookie(Event):
     property cookie:
         def __get__(self):
             return (<scribe_event_sig_send_cookie *>self.event_struct).cookie
+        def __set__(self, value):
+            (<scribe_event_sig_send_cookie *>self.event_struct).cookie = value
 
 cdef class EventSigRecvCookie(Event):
     type = Event.register(EventSigRecvCookie, SCRIBE_EVENT_SIG_RECV_COOKIE)
@@ -284,6 +344,8 @@ cdef class EventSigRecvCookie(Event):
     property cookie:
         def __get__(self):
             return (<scribe_event_sig_recv_cookie *>self.event_struct).cookie
+        def __set__(self, value):
+            (<scribe_event_sig_recv_cookie *>self.event_struct).cookie = value
 
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
@@ -292,6 +354,8 @@ cdef class EventDivergeEventType(EventDiverge):
     property event_type:
         def __get__(self):
             return (<scribe_event_diverge_event_type *>self.event_struct).type
+        def __set__(self, value):
+            (<scribe_event_diverge_event_type *>self.event_struct).type = value
 
 cdef class EventDivergeEventSize(EventDiverge):
     type = Event.register(EventDivergeEventSize,
@@ -300,6 +364,8 @@ cdef class EventDivergeEventSize(EventDiverge):
     property size:
         def __get__(self):
             return (<scribe_event_diverge_event_size *>self.event_struct).size
+        def __set__(self, value):
+            (<scribe_event_diverge_event_size *>self.event_struct).size = value
 
 cdef class EventDivergeDataType(EventDiverge):
     type = Event.register(EventDivergeDataType,
@@ -308,6 +374,8 @@ cdef class EventDivergeDataType(EventDiverge):
     property data_type:
         def __get__(self):
             return (<scribe_event_diverge_data_type *>self.event_struct).type
+        def __set__(self, value):
+            (<scribe_event_diverge_data_type *>self.event_struct).type = value
 
 cdef class EventDivergeDataPtr(EventDiverge):
     type = Event.register(EventDivergeDataPtr,
@@ -316,6 +384,8 @@ cdef class EventDivergeDataPtr(EventDiverge):
     property user_ptr:
         def __get__(self):
             return (<scribe_event_diverge_data_ptr *>self.event_struct).user_ptr
+        def __set__(self, value):
+            (<scribe_event_diverge_data_ptr *>self.event_struct).user_ptr = value
 
 cdef class EventDivergeDataContent(EventDiverge):
     type = Event.register(EventDivergeDataContent,
@@ -325,6 +395,9 @@ cdef class EventDivergeDataContent(EventDiverge):
         def __get__(self):
             return (<scribe_event_diverge_data_content *>
                     self.event_struct).offset
+        def __set__(self, value):
+            (<scribe_event_diverge_data_content *>
+                    self.event_struct).offset = value
 
     property data:
         def __get__(self):
@@ -345,6 +418,8 @@ cdef class EventDivergeSyscall(EventDiverge):
     property nr:
         def __get__(self):
             return (<scribe_event_diverge_syscall *> self.event_struct).nr
+        def __set__(self, value):
+            (<scribe_event_diverge_syscall *> self.event_struct).nr = value
 
 
 cdef class EventDivergeSyscallRet(EventDiverge):
@@ -354,6 +429,8 @@ cdef class EventDivergeSyscallRet(EventDiverge):
     property ret:
         def __get__(self):
             return (<scribe_event_diverge_syscall_ret *> self.event_struct).ret
+        def __set__(self, value):
+            (<scribe_event_diverge_syscall_ret *> self.event_struct).ret = value
 
 cdef class EventDivergeFenceSerial(EventDiverge):
     type = Event.register(EventDivergeFenceSerial,
@@ -363,6 +440,9 @@ cdef class EventDivergeFenceSerial(EventDiverge):
         def __get__(self):
             return (<scribe_event_diverge_fence_serial *>
                         self.event_struct).serial
+        def __set__(self, value):
+            (<scribe_event_diverge_fence_serial *>
+                        self.event_struct).serial = value
 
 cdef class EventDivergeMemOwned(EventDiverge):
     type = Event.register(EventDivergeMemOwned,
@@ -372,10 +452,17 @@ cdef class EventDivergeMemOwned(EventDiverge):
         def __get__(self):
             return (<scribe_event_diverge_mem_owned *>
                         self.event_struct).address
+        def __set__(self, value):
+            (<scribe_event_diverge_mem_owned *>
+                        self.event_struct).address = value
+
     property write_access:
         def __get__(self):
             return (<scribe_event_diverge_mem_owned *>
                         self.event_struct).write_access
+        def __set__(self, value):
+            (<scribe_event_diverge_mem_owned *>
+                        self.event_struct).write_access = value
 
 cdef class EventDivergeMemNotOwned(EventDiverge):
     type = Event.register(EventDivergeMemNotOwned,
