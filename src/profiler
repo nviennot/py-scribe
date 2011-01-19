@@ -38,6 +38,7 @@ def main():
                                    ("", "    ")[info.in_syscall],
                                    "  " * info.res_depth,
                                    event))
+            print(event.encode())
     else:
         for event in scribe.EventsFromBuffer(logfile_map, do_info=False):
             print(event)

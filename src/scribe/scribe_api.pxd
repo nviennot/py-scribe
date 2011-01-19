@@ -26,6 +26,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_RES_EXTRA
     enum: SCRIBE_DATA_EXTRA
     enum: SCRIBE_DATA_DET
+    enum: SCRIBE_RES_ALWAYS
     enum: SCRIBE_FENCE_ALWAYS
     enum: SCRIBE_REGS
     enum: SCRIBE_ALL
