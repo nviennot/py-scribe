@@ -19,12 +19,16 @@ def main():
     parser.add_option('-o', '--output', dest='logfile', metavar='FILE',
            help='Write the recorded execution to FILE.')
     parser.add_option('-l', '--log-verbosity', dest='log_verbosity',
-            metavar='VERBOSITY', type='int', default=-1,
-            help='Specify the verbosity of the recording in the log file. ' \
-                 '0 results in a minimal log file, 15 is the opposite.')
+           metavar='VERBOSITY', type='int', default=-1,
+           help='Specify the verbosity of the recording in the log file. ' \
+                '0 results in a minimal log file, 15 is the opposite.')
     parser.add_option("-s", "--shell",
-                      action="store_true", dest="shell", default=False,
-                      help="Run the command through the shell")
+           action='store_true', dest='shell', default=False,
+           help='Run the command through the shell')
+    parser.add_option('-a', '--auto-bookmark', dest='auto_bookmark',
+           metavar='INTERVAL', type='float', default=0,
+           help='Send bookmark request every INTERVAL seconds ' \
+                '(floats are okey)')
 
     parser.disable_interspersed_args()
     (options, cmd) = parser.parse_args()
@@ -46,21 +50,30 @@ def main():
                           flags = flags)
 
     stop_requested = [False]
-    def sigusr1(signum, stack):
+    def do_stop(signum, stack):
         try:
             ps.stop()
             stop_requested[0] = True
         except OSError as e:
             print("Cannot request to stop (%s)" % str(e), file=sys.stderr)
-    def sigusr2(signum, stack):
+    def do_bookmark(signum, stack):
         try:
             ps.bookmark()
         except OSError as e:
             print("Cannot request bookmark (%s)" % str(e), file=sys.stderr)
-    signal.signal(signal.SIGUSR1, sigusr1)
-    signal.signal(signal.SIGUSR2, sigusr2)
+    signal.signal(signal.SIGUSR1, do_stop)
+    signal.signal(signal.SIGUSR2, do_bookmark)
+    signal.signal(signal.SIGALRM, do_bookmark)
+
+    if options.auto_bookmark:
+        signal.setitimer(signal.ITIMER_REAL,
+                         options.auto_bookmark, options.auto_bookmark)
 
     ps.scribe_wait()
+
+    if options.auto_bookmark:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+
     if stop_requested[0]:
         print("Recording stopped", file=sys.stderr)
     ps.wait()
