@@ -50,15 +50,13 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_DATA_INTERNAL
     enum: SCRIBE_DATA_ZERO
 
-    enum: SCRIBE_RES_TYPE_RESERVED
     enum: SCRIBE_RES_TYPE_INODE
     enum: SCRIBE_RES_TYPE_FILE
     enum: SCRIBE_RES_TYPE_FILES_STRUCT
     enum: SCRIBE_RES_TYPE_TASK
     enum: SCRIBE_RES_TYPE_FUTEX
     enum: SCRIBE_RES_TYPE_IPC
-    enum: SCRIBE_RES_TYPE_SPINLOCK
-    enum: SCRIBE_RES_TYPE_REGISTRATION
+    enum: SCRIBE_RES_SPINLOCK
 
     enum scribe_event_type:
         SCRIBE_EVENT_INIT
