@@ -36,7 +36,10 @@ def main():
                       golive_bookmark_id = options.golive_bookmark_id)
 
     def sigusr1(signum, stack):
-        ps.stop()
+        try:
+            ps.stop()
+        except OSError as e:
+            print("Cannot request to stop (%s)" % str(e))
     signal.signal(signal.SIGUSR1, sigusr1)
 
     ps.wait()

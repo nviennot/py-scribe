@@ -45,9 +45,15 @@ def main():
                           flags = flags)
 
     def sigusr1(signum, stack):
-        ps.stop()
+        try:
+            ps.stop()
+        except OSError as e:
+            print("Cannot request to stop (%s)" % str(e))
     def sigusr2(signum, stack):
-        ps.bookmark()
+        try:
+            ps.bookmark()
+        except OSError as e:
+            print("Cannot request bookmark (%s)" % str(e))
     signal.signal(signal.SIGUSR1, sigusr1)
     signal.signal(signal.SIGUSR2, sigusr2)
 
