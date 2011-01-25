@@ -92,7 +92,7 @@ class DivergeError(Exception):
 
     def _dump_backtrace(self):
         strs = []
-        strs.append("Backtrace:")
+        strs.append("Backtrace (%d events):" % len(self.backtrace_offsets))
 
         try:
             logfile_map = mmap.mmap(self.logfile.fileno(), 0,
@@ -101,15 +101,26 @@ class DivergeError(Exception):
             strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
+        events = dict()
         it = EventsFromBuffer(logfile_map, remove_annotations=False)
-        events = dict((info.offset, (info, event)) for info, event in it if
-                      info.offset in self.backtrace_offsets)
+        try:
+            for info, event in it:
+                if info.offset in self.backtrace_offsets:
+                    events[info.offset] = (info, event)
+        except:
+            strs.append("The log file is invalid...")
+
         for offset in self.backtrace_offsets:
-            (info, event) = events[offset]
-            strs.append("  [%02d] %s%s%s" % (info.pid,
-                                             ("", "    ")[info.in_syscall],
-                                             "  " * info.res_depth,
-                                             event))
+            try:
+                (info, event) = events[offset]
+                strs.append("  [%02d] %s%s%s" % (info.pid,
+                                                 ("", "    ")[info.in_syscall],
+                                                 "  " * info.res_depth,
+                                                 event))
+            except:
+                # That must be an EventPid of EventSyscallEnd, we don't have
+                # them in the list.
+                strs.append("unknown event offset = %d" % offset)
         return strs
 
     def __str__(self):
