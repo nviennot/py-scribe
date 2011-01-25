@@ -288,12 +288,11 @@ class Popen(subprocess.Popen, Context):
         Context.__del__(self)
         subprocess.Popen.__del__(self, _maxsize=_maxsize, _active=_active)
 
+    def scribe_wait(self):
+        Context.wait(self)
 
     def wait(self):
-        if self.returncode is None:
-            Context.wait(self)
         return subprocess.Popen.wait(self)
-
 
     def init_loader(self, args, env):
         (preexec_fn, close_fds, cwd, p2cread, p2cwrite,

@@ -35,13 +35,18 @@ def main():
                       backtrace_len = options.backtrace_len,
                       golive_bookmark_id = options.golive_bookmark_id)
 
+    stop_requested = [False]
     def sigusr1(signum, stack):
         try:
             ps.stop()
+            stop_requested[0] = True
         except OSError as e:
-            print("Cannot request to stop (%s)" % str(e))
+            print("Cannot request to stop (%s)" % str(e), file=sys.stderr)
     signal.signal(signal.SIGUSR1, sigusr1)
 
+    ps.scribe_wait()
+    if stop_requested[0]:
+        print("Replay stopped", file=sys.stderr)
     ps.wait()
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import scribe
 import signal
 from optparse import OptionParser
@@ -44,20 +45,26 @@ def main():
         ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
                           flags = flags)
 
+    stop_requested = [False]
     def sigusr1(signum, stack):
         try:
             ps.stop()
+            stop_requested[0] = True
         except OSError as e:
-            print("Cannot request to stop (%s)" % str(e))
+            print("Cannot request to stop (%s)" % str(e), file=sys.stderr)
     def sigusr2(signum, stack):
         try:
             ps.bookmark()
         except OSError as e:
-            print("Cannot request bookmark (%s)" % str(e))
+            print("Cannot request bookmark (%s)" % str(e), file=sys.stderr)
     signal.signal(signal.SIGUSR1, sigusr1)
     signal.signal(signal.SIGUSR2, sigusr2)
 
+    ps.scribe_wait()
+    if stop_requested[0]:
+        print("Recording stopped", file=sys.stderr)
     ps.wait()
+
 
 if __name__ == '__main__':
     main()
