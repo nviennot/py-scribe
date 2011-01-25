@@ -101,16 +101,11 @@ class DivergeError(Exception):
             strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
-        it = EventsFromBuffer(logfile_map)
+        it = EventsFromBuffer(logfile_map, remove_annotations=False)
         events = dict((info.offset, (info, event)) for info, event in it if
                       info.offset in self.backtrace_offsets)
         for offset in self.backtrace_offsets:
-            try:
-                (info, event) = events[offset]
-            except KeyError:
-                # That must be an EventPid of EventSyscallEnd, we don't have
-                # them in the list.
-                continue
+            (info, event) = events[offset]
             strs.append("  [%02d] %s%s%s" % (info.pid,
                                              ("", "    ")[info.in_syscall],
                                              "  " * info.res_depth,
