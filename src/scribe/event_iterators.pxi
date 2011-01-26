@@ -1,4 +1,4 @@
-from scribe_api cimport *
+cimport scribe_api
 cimport cpython
 
 class EventInfo:
@@ -47,8 +47,8 @@ cdef class EventsFromBuffer:
 
         if is_sized_event:
             event_sized = self.buffer[self.offset:
-                                      sizeof(scribe_event_sized)+self.offset]
-            extra_size = (<scribe_event_sized *>
+                                      sizeof(scribe_api.scribe_event_sized)+self.offset]
+            extra_size = (<scribe_api.scribe_event_sized *>
                                     cpython.PyBytes_AsString(event_sized)).size
         else:
             extra_size = 0

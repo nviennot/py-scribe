@@ -1,7 +1,7 @@
 from libc.stdlib cimport *
 from libc.errno cimport *
 from libc.string cimport *
-from scribe_api cimport *
+cimport scribe_api
 cimport cpython
 import os
 
@@ -11,15 +11,15 @@ def Event_from_bytes(bytes buffer):
 
 def Event_get_type_info(type):
     return Event.class_of[type], \
-            sizeof_event_from_type(type), \
-            is_sized_type(type)
+            scribe_api.sizeof_event_from_type(type), \
+            scribe_api.is_sized_type(type)
 
 def Event_register(event_class, type):
     Event.class_of[type] = event_class
     return type
 
 cpdef inline size_t Event_size_from_type(int type) except -1:
-    return sizeof_event_from_type(type)
+    return scribe_api.sizeof_event_from_type(type)
 
 cdef class Event:
     class_of = dict()
@@ -31,17 +31,17 @@ cdef class Event:
 
     # We need to keep the event reference because event_struct won't
     cdef bytes event
-    cdef scribe_event *event_struct
+    cdef scribe_api.scribe_event *event_struct
 
     def __init__(self, bytes event=None, int extra_size=0):
-        cdef scribe_event h
+        cdef scribe_api.scribe_event h
         cdef int type = self.type
         # We prefer to use the cdef version for performance reasons.
         cdef size_t event_size = Event_size_from_type(type) + extra_size
         if event is None:
             h = {'type': type}
             header = cpython.PyBytes_FromStringAndSize(<char *>&h,
-                                                       sizeof(scribe_event))
+                                                       sizeof(scribe_api.scribe_event))
             self.event = header + bytes(event_size - len(header))
         else:
             assert event_size == len(event)
@@ -49,7 +49,7 @@ cdef class Event:
 
         # XXX We cannot modify the struct as we are using
         # underlying bytes, and not a bytearray.
-        self.event_struct = <scribe_event *>cpython.PyBytes_AsString(self.event)
+        self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self.event)
         assert self.event_struct.type == type
 
     def __len__(self):
@@ -57,7 +57,7 @@ cdef class Event:
 
     def __str__(self):
         cdef char buffer[4096]
-        return scribe_get_event_str(buffer, sizeof(buffer),
+        return scribe_api.scribe_get_event_str(buffer, sizeof(buffer),
                                     self.event_struct).decode()
 
     def encode(self):
@@ -70,408 +70,408 @@ cdef class EventDiverge(Event):
 
     property pid:
         def __get__(self):
-            return (<scribe_event_diverge *>self.event_struct).pid
+            return (<scribe_api.scribe_event_diverge *>self.event_struct).pid
         def __set__(self, value):
-            (<scribe_event_diverge *>self.event_struct).pid = value
+            (<scribe_api.scribe_event_diverge *>self.event_struct).pid = value
 
     property last_event_offset:
         def __get__(self):
-            return (<scribe_event_diverge *>
+            return (<scribe_api.scribe_event_diverge *>
                         self.event_struct).last_event_offset
         def __set__(self, value):
-            (<scribe_event_diverge *>self.event_struct).last_event_offset = value
+            (<scribe_api.scribe_event_diverge *>self.event_struct).last_event_offset = value
 
 cdef class EventInit(EventSized):
-    type = Event.register(EventInit, SCRIBE_EVENT_INIT)
+    type = Event.register(EventInit, scribe_api.SCRIBE_EVENT_INIT)
 
 cdef class EventPid(Event):
-    type = Event.register(EventPid, SCRIBE_EVENT_PID)
+    type = Event.register(EventPid, scribe_api.SCRIBE_EVENT_PID)
 
     property pid:
         def __get__(self):
-            return (<scribe_event_pid *>self.event_struct).pid
+            return (<scribe_api.scribe_event_pid *>self.event_struct).pid
         def __set__(self, value):
-            (<scribe_event_pid *>self.event_struct).pid = value
+            (<scribe_api.scribe_event_pid *>self.event_struct).pid = value
 
 cdef class EventData(EventSized):
-    type = Event.register(EventData, SCRIBE_EVENT_DATA)
+    type = Event.register(EventData, scribe_api.SCRIBE_EVENT_DATA)
 
     property data:
         def __get__(self):
             return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_event_data *>self.event_struct).data,
-                    (<scribe_event_data *>self.event_struct).h.size)
+                    <char *>(<scribe_api.scribe_event_data *>self.event_struct).data,
+                    (<scribe_api.scribe_event_data *>self.event_struct).h.size)
 
 cdef class EventDataExtra(EventSized):
-    type = Event.register(EventDataExtra, SCRIBE_EVENT_DATA_EXTRA)
+    type = Event.register(EventDataExtra, scribe_api.SCRIBE_EVENT_DATA_EXTRA)
 
     property user_ptr:
         def __get__(self):
-            return (<scribe_event_data_extra *>self.event_struct).user_ptr
+            return (<scribe_api.scribe_event_data_extra *>self.event_struct).user_ptr
         def __set__(self, value):
-            (<scribe_event_data_extra *>self.event_struct).user_ptr = value
+            (<scribe_api.scribe_event_data_extra *>self.event_struct).user_ptr = value
 
     property data_type:
         def __get__(self):
-            return (<scribe_event_data_extra *>self.event_struct).data_type
+            return (<scribe_api.scribe_event_data_extra *>self.event_struct).data_type
         def __set__(self, value):
-            (<scribe_event_data_extra *>self.event_struct).data_type = value
+            (<scribe_api.scribe_event_data_extra *>self.event_struct).data_type = value
 
     property data:
         def __get__(self):
             return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_event_data_extra *>self.event_struct).data,
-                    (<scribe_event_data_extra *>self.event_struct).h.size)
+                    <char *>(<scribe_api.scribe_event_data_extra *>self.event_struct).data,
+                    (<scribe_api.scribe_event_data_extra *>self.event_struct).h.size)
 
 cdef class EventSyscall(Event):
-    type = Event.register(EventSyscall, SCRIBE_EVENT_SYSCALL)
+    type = Event.register(EventSyscall, scribe_api.SCRIBE_EVENT_SYSCALL)
 
     property ret:
         def __get__(self):
-            return (<scribe_event_syscall *>self.event_struct).ret
+            return (<scribe_api.scribe_event_syscall *>self.event_struct).ret
         def __set__(self, value):
-            (<scribe_event_syscall *>self.event_struct).ret = value
+            (<scribe_api.scribe_event_syscall *>self.event_struct).ret = value
 
 cdef class EventSyscallExtra(Event):
-    type = Event.register(EventSyscallExtra, SCRIBE_EVENT_SYSCALL_EXTRA)
+    type = Event.register(EventSyscallExtra, scribe_api.SCRIBE_EVENT_SYSCALL_EXTRA)
 
     property ret:
         def __get__(self):
-            return (<scribe_event_syscall_extra *>self.event_struct).ret
+            return (<scribe_api.scribe_event_syscall_extra *>self.event_struct).ret
         def __set__(self, value):
-            (<scribe_event_syscall_extra *>self.event_struct).ret = value
+            (<scribe_api.scribe_event_syscall_extra *>self.event_struct).ret = value
 
     property nr:
         def __get__(self):
-            return (<scribe_event_syscall_extra *>self.event_struct).nr
+            return (<scribe_api.scribe_event_syscall_extra *>self.event_struct).nr
         def __set__(self, value):
-            (<scribe_event_syscall_extra *>self.event_struct).nr = value
+            (<scribe_api.scribe_event_syscall_extra *>self.event_struct).nr = value
 
 cdef class EventSyscallEnd(Event):
-    type = Event.register(EventSyscallEnd, SCRIBE_EVENT_SYSCALL_END)
+    type = Event.register(EventSyscallEnd, scribe_api.SCRIBE_EVENT_SYSCALL_END)
 
 cdef class EventQueueEof(Event):
-    type = Event.register(EventQueueEof, SCRIBE_EVENT_QUEUE_EOF)
+    type = Event.register(EventQueueEof, scribe_api.SCRIBE_EVENT_QUEUE_EOF)
 
 cdef class EventResourceLock(Event):
-    type = Event.register(EventResourceLock, SCRIBE_EVENT_RESOURCE_LOCK)
+    type = Event.register(EventResourceLock, scribe_api.SCRIBE_EVENT_RESOURCE_LOCK)
 
     property serial:
         def __get__(self):
-            return (<scribe_event_resource_lock *>self.event_struct).serial
+            return (<scribe_api.scribe_event_resource_lock *>self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_resource_lock *>self.event_struct).serial = value
+            (<scribe_api.scribe_event_resource_lock *>self.event_struct).serial = value
 
 cdef class EventResourceLockIntr(Event):
     type = Event.register(EventResourceLockIntr,
-                          SCRIBE_EVENT_RESOURCE_LOCK_INTR)
+                          scribe_api.SCRIBE_EVENT_RESOURCE_LOCK_INTR)
 
 cdef class EventResourceLockExtra(Event):
     type = Event.register(EventResourceLockExtra,
-                          SCRIBE_EVENT_RESOURCE_LOCK_EXTRA)
+                          scribe_api.SCRIBE_EVENT_RESOURCE_LOCK_EXTRA)
 
     property resource_type:
         def __get__(self):
-            return (<scribe_event_resource_lock_extra *>self.event_struct).type
+            return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).type
         def __set__(self, value):
-            (<scribe_event_resource_lock_extra *>self.event_struct).type = value
+            (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).type = value
 
     property object:
         def __get__(self):
-            return (<scribe_event_resource_lock_extra *>self.event_struct).object
+            return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).object
         def __set__(self, value):
-            (<scribe_event_resource_lock_extra *>self.event_struct).object = value
+            (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).object = value
 
     property serial:
         def __get__(self):
-            return (<scribe_event_resource_lock_extra *>self.event_struct).serial
+            return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_resource_lock_extra *>self.event_struct).serial = value
+            (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).serial = value
 
 cdef class EventResourceUnlock(Event):
-    type = Event.register(EventResourceUnlock, SCRIBE_EVENT_RESOURCE_UNLOCK)
+    type = Event.register(EventResourceUnlock, scribe_api.SCRIBE_EVENT_RESOURCE_UNLOCK)
 
     property object:
         def __get__(self):
-            return (<scribe_event_resource_unlock *>self.event_struct).object
+            return (<scribe_api.scribe_event_resource_unlock *>self.event_struct).object
         def __set__(self, value):
-            (<scribe_event_resource_unlock *>self.event_struct).object = value
+            (<scribe_api.scribe_event_resource_unlock *>self.event_struct).object = value
 
 cdef class EventRdtsc(Event):
-    type = Event.register(EventRdtsc, SCRIBE_EVENT_RDTSC)
+    type = Event.register(EventRdtsc, scribe_api.SCRIBE_EVENT_RDTSC)
 
     property tsc:
         def __get__(self):
-            return (<scribe_event_rdtsc *>self.event_struct).tsc
+            return (<scribe_api.scribe_event_rdtsc *>self.event_struct).tsc
         def __set__(self, value):
-            (<scribe_event_rdtsc *>self.event_struct).tsc = value
+            (<scribe_api.scribe_event_rdtsc *>self.event_struct).tsc = value
 
 cdef class EventSignal(EventSized):
-    type = Event.register(EventSignal, SCRIBE_EVENT_SIGNAL)
+    type = Event.register(EventSignal, scribe_api.SCRIBE_EVENT_SIGNAL)
 
     property nr:
         def __get__(self):
-            return (<scribe_event_signal *>self.event_struct).nr
+            return (<scribe_api.scribe_event_signal *>self.event_struct).nr
         def __set__(self, value):
-            (<scribe_event_signal *>self.event_struct).nr = value
+            (<scribe_api.scribe_event_signal *>self.event_struct).nr = value
 
     property deferred:
         def __get__(self):
-            return (<scribe_event_signal *>self.event_struct).deferred
+            return (<scribe_api.scribe_event_signal *>self.event_struct).deferred
         def __set__(self, value):
-            (<scribe_event_signal *>self.event_struct).deferred = value
+            (<scribe_api.scribe_event_signal *>self.event_struct).deferred = value
 
     property info:
         def __get__(self):
             return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_event_signal *>self.event_struct).info,
-                    (<scribe_event_signal *>self.event_struct).h.size)
+                    <char *>(<scribe_api.scribe_event_signal *>self.event_struct).info,
+                    (<scribe_api.scribe_event_signal *>self.event_struct).h.size)
 
 cdef class EventFence(Event):
-    type = Event.register(EventFence, SCRIBE_EVENT_FENCE)
+    type = Event.register(EventFence, scribe_api.SCRIBE_EVENT_FENCE)
 
     property serial:
         def __get__(self):
-            return (<scribe_event_fence *>self.event_struct).serial
+            return (<scribe_api.scribe_event_fence *>self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_fence *>self.event_struct).serial = value
+            (<scribe_api.scribe_event_fence *>self.event_struct).serial = value
 
 cdef class EventMemOwnedRead(Event):
-    type = Event.register(EventMemOwnedRead, SCRIBE_EVENT_MEM_OWNED_READ)
+    type = Event.register(EventMemOwnedRead, scribe_api.SCRIBE_EVENT_MEM_OWNED_READ)
 
     property serial:
         def __get__(self):
-            return (<scribe_event_mem_owned_read *>self.event_struct).serial
+            return (<scribe_api.scribe_event_mem_owned_read *>self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_mem_owned_read *>self.event_struct).serial = value
+            (<scribe_api.scribe_event_mem_owned_read *>self.event_struct).serial = value
 
 cdef class EventMemOwnedWrite(Event):
-    type = Event.register(EventMemOwnedWrite, SCRIBE_EVENT_MEM_OWNED_WRITE)
+    type = Event.register(EventMemOwnedWrite, scribe_api.SCRIBE_EVENT_MEM_OWNED_WRITE)
 
     property serial:
         def __get__(self):
-            return (<scribe_event_mem_owned_write *>self.event_struct).serial
+            return (<scribe_api.scribe_event_mem_owned_write *>self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_mem_owned_write *>self.event_struct).serial = value
+            (<scribe_api.scribe_event_mem_owned_write *>self.event_struct).serial = value
 
 cdef class EventMemOwnedReadExtra(Event):
     type = Event.register(EventMemOwnedReadExtra,
-                          SCRIBE_EVENT_MEM_OWNED_READ_EXTRA)
+                          scribe_api.SCRIBE_EVENT_MEM_OWNED_READ_EXTRA)
 
     property address:
         def __get__(self):
-            return (<scribe_event_mem_owned_read_extra *>
+            return (<scribe_api.scribe_event_mem_owned_read_extra *>
                     self.event_struct).address
         def __set__(self, value):
-            (<scribe_event_mem_owned_read_extra *>
+            (<scribe_api.scribe_event_mem_owned_read_extra *>
                     self.event_struct).address = value
 
     property serial:
         def __get__(self):
-            return (<scribe_event_mem_owned_read_extra *>
+            return (<scribe_api.scribe_event_mem_owned_read_extra *>
                     self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_mem_owned_read_extra *>
+            (<scribe_api.scribe_event_mem_owned_read_extra *>
                     self.event_struct).serial = value
 
 cdef class EventMemOwnedWriteExtra(Event):
     type = Event.register(EventMemOwnedWriteExtra,
-                          SCRIBE_EVENT_MEM_OWNED_WRITE_EXTRA)
+                          scribe_api.SCRIBE_EVENT_MEM_OWNED_WRITE_EXTRA)
 
     property address:
         def __get__(self):
-            return (<scribe_event_mem_owned_write_extra *>
+            return (<scribe_api.scribe_event_mem_owned_write_extra *>
                     self.event_struct).address
         def __set__(self, value):
-            (<scribe_event_mem_owned_write_extra *>
+            (<scribe_api.scribe_event_mem_owned_write_extra *>
                     self.event_struct).address = value
 
     property serial:
         def __get__(self):
-            return (<scribe_event_mem_owned_write_extra *>
+            return (<scribe_api.scribe_event_mem_owned_write_extra *>
                     self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_mem_owned_write_extra *>
+            (<scribe_api.scribe_event_mem_owned_write_extra *>
                     self.event_struct).serial = value
 
 cdef class EventMemPublicRead(Event):
-    type = Event.register(EventMemPublicRead, SCRIBE_EVENT_MEM_PUBLIC_READ)
+    type = Event.register(EventMemPublicRead, scribe_api.SCRIBE_EVENT_MEM_PUBLIC_READ)
 
     property address:
         def __get__(self):
-            return (<scribe_event_mem_public_read *>self.event_struct).address
+            return (<scribe_api.scribe_event_mem_public_read *>self.event_struct).address
         def __set__(self, value):
-            (<scribe_event_mem_public_read *>self.event_struct).address = value
+            (<scribe_api.scribe_event_mem_public_read *>self.event_struct).address = value
 
 cdef class EventMemPublicWrite(Event):
-    type = Event.register(EventMemPublicWrite, SCRIBE_EVENT_MEM_PUBLIC_WRITE)
+    type = Event.register(EventMemPublicWrite, scribe_api.SCRIBE_EVENT_MEM_PUBLIC_WRITE)
 
     property address:
         def __get__(self):
-            return (<scribe_event_mem_public_write *>self.event_struct).address
+            return (<scribe_api.scribe_event_mem_public_write *>self.event_struct).address
         def __set__(self, value):
-            (<scribe_event_mem_public_write *>self.event_struct).address = value
+            (<scribe_api.scribe_event_mem_public_write *>self.event_struct).address = value
 
 cdef class EventMemAlone(Event):
-    type = Event.register(EventMemAlone, SCRIBE_EVENT_MEM_ALONE)
+    type = Event.register(EventMemAlone, scribe_api.SCRIBE_EVENT_MEM_ALONE)
 
 cdef class EventRegs(Event):
-    type = Event.register(EventRegs, SCRIBE_EVENT_REGS)
+    type = Event.register(EventRegs, scribe_api.SCRIBE_EVENT_REGS)
 
 cdef class EventBookmark(Event):
-    type = Event.register(EventBookmark, SCRIBE_EVENT_BOOKMARK)
+    type = Event.register(EventBookmark, scribe_api.SCRIBE_EVENT_BOOKMARK)
 
     property id:
         def __get__(self):
-            return (<scribe_event_bookmark *>self.event_struct).id
+            return (<scribe_api.scribe_event_bookmark *>self.event_struct).id
         def __set__(self, value):
-            (<scribe_event_bookmark *>self.event_struct).id = value
+            (<scribe_api.scribe_event_bookmark *>self.event_struct).id = value
 
     property npr:
         def __get__(self):
-            return (<scribe_event_bookmark *>self.event_struct).npr
+            return (<scribe_api.scribe_event_bookmark *>self.event_struct).npr
         def __set__(self, value):
-            (<scribe_event_bookmark *>self.event_struct).npr = value
+            (<scribe_api.scribe_event_bookmark *>self.event_struct).npr = value
 
 cdef class EventSigSendCookie(Event):
-    type = Event.register(EventSigSendCookie, SCRIBE_EVENT_SIG_SEND_COOKIE)
+    type = Event.register(EventSigSendCookie, scribe_api.SCRIBE_EVENT_SIG_SEND_COOKIE)
 
     property cookie:
         def __get__(self):
-            return (<scribe_event_sig_send_cookie *>self.event_struct).cookie
+            return (<scribe_api.scribe_event_sig_send_cookie *>self.event_struct).cookie
         def __set__(self, value):
-            (<scribe_event_sig_send_cookie *>self.event_struct).cookie = value
+            (<scribe_api.scribe_event_sig_send_cookie *>self.event_struct).cookie = value
 
 cdef class EventSigRecvCookie(Event):
-    type = Event.register(EventSigRecvCookie, SCRIBE_EVENT_SIG_RECV_COOKIE)
+    type = Event.register(EventSigRecvCookie, scribe_api.SCRIBE_EVENT_SIG_RECV_COOKIE)
 
     property cookie:
         def __get__(self):
-            return (<scribe_event_sig_recv_cookie *>self.event_struct).cookie
+            return (<scribe_api.scribe_event_sig_recv_cookie *>self.event_struct).cookie
         def __set__(self, value):
-            (<scribe_event_sig_recv_cookie *>self.event_struct).cookie = value
+            (<scribe_api.scribe_event_sig_recv_cookie *>self.event_struct).cookie = value
 
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
-                          SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
 
     property event_type:
         def __get__(self):
-            return (<scribe_event_diverge_event_type *>self.event_struct).type
+            return (<scribe_api.scribe_event_diverge_event_type *>self.event_struct).type
         def __set__(self, value):
-            (<scribe_event_diverge_event_type *>self.event_struct).type = value
+            (<scribe_api.scribe_event_diverge_event_type *>self.event_struct).type = value
 
 cdef class EventDivergeEventSize(EventDiverge):
     type = Event.register(EventDivergeEventSize,
-                          SCRIBE_EVENT_DIVERGE_EVENT_SIZE)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_EVENT_SIZE)
 
     property size:
         def __get__(self):
-            return (<scribe_event_diverge_event_size *>self.event_struct).size
+            return (<scribe_api.scribe_event_diverge_event_size *>self.event_struct).size
         def __set__(self, value):
-            (<scribe_event_diverge_event_size *>self.event_struct).size = value
+            (<scribe_api.scribe_event_diverge_event_size *>self.event_struct).size = value
 
 cdef class EventDivergeDataType(EventDiverge):
     type = Event.register(EventDivergeDataType,
-                          SCRIBE_EVENT_DIVERGE_DATA_TYPE)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_DATA_TYPE)
 
     property data_type:
         def __get__(self):
-            return (<scribe_event_diverge_data_type *>self.event_struct).type
+            return (<scribe_api.scribe_event_diverge_data_type *>self.event_struct).type
         def __set__(self, value):
-            (<scribe_event_diverge_data_type *>self.event_struct).type = value
+            (<scribe_api.scribe_event_diverge_data_type *>self.event_struct).type = value
 
 cdef class EventDivergeDataPtr(EventDiverge):
     type = Event.register(EventDivergeDataPtr,
-                          SCRIBE_EVENT_DIVERGE_DATA_PTR)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_DATA_PTR)
 
     property user_ptr:
         def __get__(self):
-            return (<scribe_event_diverge_data_ptr *>self.event_struct).user_ptr
+            return (<scribe_api.scribe_event_diverge_data_ptr *>self.event_struct).user_ptr
         def __set__(self, value):
-            (<scribe_event_diverge_data_ptr *>self.event_struct).user_ptr = value
+            (<scribe_api.scribe_event_diverge_data_ptr *>self.event_struct).user_ptr = value
 
 cdef class EventDivergeDataContent(EventDiverge):
     type = Event.register(EventDivergeDataContent,
-                          SCRIBE_EVENT_DIVERGE_DATA_CONTENT)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_DATA_CONTENT)
 
     property offset:
         def __get__(self):
-            return (<scribe_event_diverge_data_content *>
+            return (<scribe_api.scribe_event_diverge_data_content *>
                     self.event_struct).offset
         def __set__(self, value):
-            (<scribe_event_diverge_data_content *>
+            (<scribe_api.scribe_event_diverge_data_content *>
                     self.event_struct).offset = value
 
     property data:
         def __get__(self):
             return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_event_diverge_data_content *>
+                    <char *>(<scribe_api.scribe_event_diverge_data_content *>
                         self.event_struct).data,
-                    (<scribe_event_diverge_data_content *>
+                    (<scribe_api.scribe_event_diverge_data_content *>
                         self.event_struct).size)
 
 cdef class EventDivergeResourceType(EventDiverge):
     type = Event.register(EventDivergeResourceType,
-                          SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_RESOURCE_TYPE)
 
 cdef class EventDivergeSyscall(EventDiverge):
     type = Event.register(EventDivergeSyscall,
-                          SCRIBE_EVENT_DIVERGE_SYSCALL)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_SYSCALL)
 
     property nr:
         def __get__(self):
-            return (<scribe_event_diverge_syscall *> self.event_struct).nr
+            return (<scribe_api.scribe_event_diverge_syscall *> self.event_struct).nr
         def __set__(self, value):
-            (<scribe_event_diverge_syscall *> self.event_struct).nr = value
+            (<scribe_api.scribe_event_diverge_syscall *> self.event_struct).nr = value
 
 
 cdef class EventDivergeSyscallRet(EventDiverge):
     type = Event.register(EventDivergeSyscallRet,
-                          SCRIBE_EVENT_DIVERGE_SYSCALL_RET)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_SYSCALL_RET)
 
     property ret:
         def __get__(self):
-            return (<scribe_event_diverge_syscall_ret *> self.event_struct).ret
+            return (<scribe_api.scribe_event_diverge_syscall_ret *> self.event_struct).ret
         def __set__(self, value):
-            (<scribe_event_diverge_syscall_ret *> self.event_struct).ret = value
+            (<scribe_api.scribe_event_diverge_syscall_ret *> self.event_struct).ret = value
 
 cdef class EventDivergeFenceSerial(EventDiverge):
     type = Event.register(EventDivergeFenceSerial,
-                          SCRIBE_EVENT_DIVERGE_FENCE_SERIAL)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_FENCE_SERIAL)
 
     property serial:
         def __get__(self):
-            return (<scribe_event_diverge_fence_serial *>
+            return (<scribe_api.scribe_event_diverge_fence_serial *>
                         self.event_struct).serial
         def __set__(self, value):
-            (<scribe_event_diverge_fence_serial *>
+            (<scribe_api.scribe_event_diverge_fence_serial *>
                         self.event_struct).serial = value
 
 cdef class EventDivergeMemOwned(EventDiverge):
     type = Event.register(EventDivergeMemOwned,
-                          SCRIBE_EVENT_DIVERGE_MEM_OWNED)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_MEM_OWNED)
 
     property address:
         def __get__(self):
-            return (<scribe_event_diverge_mem_owned *>
+            return (<scribe_api.scribe_event_diverge_mem_owned *>
                         self.event_struct).address
         def __set__(self, value):
-            (<scribe_event_diverge_mem_owned *>
+            (<scribe_api.scribe_event_diverge_mem_owned *>
                         self.event_struct).address = value
 
     property write_access:
         def __get__(self):
-            return (<scribe_event_diverge_mem_owned *>
+            return (<scribe_api.scribe_event_diverge_mem_owned *>
                         self.event_struct).write_access
         def __set__(self, value):
-            (<scribe_event_diverge_mem_owned *>
+            (<scribe_api.scribe_event_diverge_mem_owned *>
                         self.event_struct).write_access = value
 
 cdef class EventDivergeMemNotOwned(EventDiverge):
     type = Event.register(EventDivergeMemNotOwned,
-                          SCRIBE_EVENT_DIVERGE_MEM_NOT_OWNED)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_MEM_NOT_OWNED)
 
 cdef class EventDivergeRegs(EventDiverge):
     type = Event.register(EventDivergeRegs,
-                          SCRIBE_EVENT_DIVERGE_REGS)
+                          scribe_api.SCRIBE_EVENT_DIVERGE_REGS)

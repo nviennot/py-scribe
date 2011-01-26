@@ -1,21 +1,4 @@
-cdef extern from "errno.h":
-    enum: EINTR
-
-cdef extern from "linux/types.h":
-    ctypedef long long loff_t
-    ctypedef unsigned char __u8
-    ctypedef unsigned short __u16
-    ctypedef unsigned int __u32
-    ctypedef unsigned long __u64
-    ctypedef char __s8
-    ctypedef short __s16
-    ctypedef int __s32
-    ctypedef long __s64
-    ctypedef int pid_t
-
-cdef extern from "asm/ptrace.h":
-    struct pt_regs:
-        pass
+from linux cimport *
 
 cdef extern from "linux/scribe_api.h" nogil:
     enum: EDIVERGE
@@ -31,6 +14,8 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_REGS
     enum: SCRIBE_ALL
     enum: SCRIBE_DEFAULT
+
+    enum: SCRIBE_DISABLE_MM
 
     enum: SCRIBE_PS_RECORD
     enum: SCRIBE_PS_REPLAY
@@ -331,7 +316,6 @@ cdef extern from "linux/scribe_api.h" nogil:
 cdef extern from "scribe.h" nogil:
     struct scribe_context
     ctypedef scribe_context *scribe_context_t
-    ctypedef char * char_p_const "char *const"
 
     struct scribe_operations:
         void (*init_loader) (void *private_data, char_p_const *argv, char_p_const *envp)

@@ -18,8 +18,8 @@ def main():
             help='Specify the maximum number of entries in the backtrace. ' \
                  'The default is 100.')
     parser.add_option("-d", "--dmesg",
-                      action="store_true", dest="dmesg", default=False,
-                      help="Show a dmesg trace if the replay diverges")
+            action="store_true", dest="dmesg", default=False,
+            help='Show a dmesg trace if the replay diverges')
     parser.add_option('-g', '--golive', dest='golive_bookmark_id',
             metavar='BOOKMARK_ID', type='int', default=None,
             help='Specify a specific bookmark to go live with')
@@ -36,13 +36,13 @@ def main():
                       golive_bookmark_id = options.golive_bookmark_id)
 
     stop_requested = [False]
-    def sigusr1(signum, stack):
+    def do_stop(signum, stack):
         try:
             ps.stop()
             stop_requested[0] = True
         except OSError as e:
             print("Cannot request to stop (%s)" % str(e), file=sys.stderr)
-    signal.signal(signal.SIGUSR1, sigusr1)
+    signal.signal(signal.SIGUSR1, do_stop)
 
     ps.scribe_wait()
     if stop_requested[0]:

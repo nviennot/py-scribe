@@ -1,6 +1,7 @@
 from libc.stdlib cimport *
 from libc.errno cimport *
-from scribe_api cimport *
+from linux cimport *
+cimport scribe_api
 cimport cpython
 import os
 import sys
@@ -17,10 +18,10 @@ cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil
     (<Context>private_data).on_backtrace(log_offsets)
 
 
-cdef void on_diverge(void *private_data, scribe_event_diverge *event) with gil:
+cdef void on_diverge(void *private_data, scribe_api.scribe_event_diverge *event) with gil:
     buffer = cpython.PyBytes_FromStringAndSize(
                  <char *>event,
-                 sizeof_event(<scribe_event *>event))
+                 scribe_api.sizeof_event(<scribe_api.scribe_event *>event))
     (<Context>private_data).on_diverge(Event_from_bytes(buffer))
 
 
@@ -66,13 +67,13 @@ cdef void init_loader(void *private_data,
     (<Context>private_data).init_loader(pstr_to_list(argv), pstr_to_dict(envp))
 
 
-cdef scribe_operations scribe_ops = {
+cdef scribe_api.scribe_operations scribe_ops = {
     'init_loader': NULL,
     'on_backtrace': on_backtrace,
     'on_diverge': on_diverge
 }
 
-cdef scribe_operations scribe_ops_with_init_loader = {
+cdef scribe_api.scribe_operations scribe_ops_with_init_loader = {
     'init_loader': init_loader,
     'on_backtrace': on_backtrace,
     'on_diverge': on_diverge
@@ -144,20 +145,20 @@ class DivergeError(Exception):
 
 
 cdef class Context:
-    cdef scribe_context_t _ctx
+    cdef scribe_api.scribe_context_t _ctx
     cdef object logfile
     cdef object log_offsets
     cdef object diverge_event
     cdef bint show_dmesg
 
     def __init__(self, logfile, has_init_loader=False, show_dmesg=False):
-        cdef scribe_operations *ops
+        cdef scribe_api.scribe_operations *ops
         if has_init_loader:
             ops = &scribe_ops_with_init_loader
         else:
             ops = &scribe_ops
 
-        err = scribe_context_create(&self._ctx, ops, <void *>self)
+        err = scribe_api.scribe_context_create(&self._ctx, ops, <void *>self)
         if err:
             self._ctx = NULL
             raise OSError(errno, os.strerror(errno))
@@ -167,9 +168,9 @@ cdef class Context:
 
     def __del__(self):
         if self._ctx:
-            scribe_context_destroy(self._ctx)
+            scribe_api.scribe_context_destroy(self._ctx)
 
-    def record(self, args, env, flags=SCRIBE_DEFAULT):
+    def record(self, args, env, flags=scribe_api.SCRIBE_DEFAULT):
         cdef char **_args = NULL
         cdef char **_env = NULL
 
@@ -182,7 +183,7 @@ cdef class Context:
             if env is not None:
                 _env = list_to_pstr(benv)
 
-            pid = scribe_record(self._ctx, flags,
+            pid = scribe_api.scribe_record(self._ctx, flags,
                                 self.logfile.fileno(), _args, _env)
             if pid < 0:
                 raise OSError(errno, os.strerror(errno))
@@ -198,7 +199,7 @@ cdef class Context:
             os.system('dmesg -c > /dev/null')
         if golive_bookmark_id is None:
             golive_bookmark_id = -1
-        pid = scribe_replay(self._ctx, 0, self.logfile.fileno(),
+        pid = scribe_api.scribe_replay(self._ctx, 0, self.logfile.fileno(),
                             backtrace_len, golive_bookmark_id)
         if pid < 0:
             raise OSError(errno, os.strerror(errno))
@@ -206,13 +207,13 @@ cdef class Context:
 
     def wait(self):
         while True:
-            err = scribe_wait(self._ctx)
+            err = scribe_api.scribe_wait(self._ctx)
             if err == 0:
                 break
             if err == -2 and errno == EINTR:
                 cpython.PyErr_CheckSignals()
                 continue
-            if errno == EDIVERGE or self.log_offsets:
+            if errno == scribe_api.EDIVERGE or self.log_offsets:
                 dmesg = None
                 if self.show_dmesg:
                     ps = subprocess.Popen('dmesg', stdout=subprocess.PIPE)
@@ -226,12 +227,12 @@ cdef class Context:
             raise OSError(errno, os.strerror(errno))
 
     def stop(self):
-        err = scribe_stop(self._ctx)
+        err = scribe_api.scribe_stop(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
 
     def bookmark(self):
-        err = scribe_bookmark(self._ctx)
+        err = scribe_api.scribe_bookmark(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
 
@@ -254,7 +255,7 @@ class Popen(subprocess.Popen, Context):
                  record=False, replay=False,
                  backtrace_len=100, show_dmesg=False,
                  golive_bookmark_id=None,
-                 flags=SCRIBE_DEFAULT,
+                 flags=scribe_api.SCRIBE_DEFAULT,
                  startupinfo=None, creationflags=0):
         """ XXX close_fds=True by default
         """
