@@ -29,6 +29,9 @@ def main():
            metavar='INTERVAL', type='float', default=0,
            help='Send bookmark request every INTERVAL seconds ' \
                 '(floats are okey)')
+    parser.add_option("-n", "--no-mm",
+           action='store_true', dest='no_mm', default=False,
+           help='Disable the memory tracking')
 
     parser.disable_interspersed_args()
     (options, cmd) = parser.parse_args()
@@ -43,11 +46,14 @@ def main():
     logfile = open(options.logfile, 'w')
 
     if options.log_verbosity == -1:
-        ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell)
+        enable_flags = scribe.SCRIBE_DEFAULT
     else:
-        flags = ((1 << options.log_verbosity)-1) << 8
-        ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
-                          flags = flags)
+        enable_flags = ((1 << options.log_verbosity)-1) << 8
+
+    disable_flags = [0, scribe.SCRIBE_DISABLE_MM][options.no_mm]
+    flags = (enable_flags & scribe.SCRIBE_ALL) | disable_flags
+    ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
+                      flags = flags)
 
     stop_requested = [False]
     def do_stop(signum, stack):
