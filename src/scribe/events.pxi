@@ -108,6 +108,12 @@ cdef class EventDataInfo(Event):
         def __set__(self, value):
             (<scribe_api.scribe_event_data_info *>self.event_struct).size = value
 
+    property data_type:
+        def __get__(self):
+            return (<scribe_api.scribe_event_data_info *>self.event_struct).data_type
+        def __set__(self, value):
+            (<scribe_api.scribe_event_data_info *>self.event_struct).data_type = value
+
 cdef class EventData(EventSized):
     type = Event.register(EventData, scribe_api.SCRIBE_EVENT_DATA)
 

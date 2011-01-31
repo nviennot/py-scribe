@@ -121,6 +121,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event h
         __u32 user_ptr
         __u16 size
+        __u8 data_type
 
     struct scribe_event_data:
         scribe_event_sized h
