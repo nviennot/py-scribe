@@ -46,6 +46,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum scribe_event_type:
         SCRIBE_EVENT_INIT
         SCRIBE_EVENT_PID
+        SCRIBE_EVENT_DATA_INFO
         SCRIBE_EVENT_DATA
         SCRIBE_EVENT_DATA_EXTRA
         SCRIBE_EVENT_SYSCALL
@@ -115,6 +116,11 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_pid:
         scribe_event h
         __u32 pid
+
+    struct scribe_event_data_info:
+        scribe_event h
+        __u32 user_ptr
+        __u16 size
 
     struct scribe_event_data:
         scribe_event_sized h

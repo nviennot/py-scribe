@@ -93,6 +93,21 @@ cdef class EventPid(Event):
         def __set__(self, value):
             (<scribe_api.scribe_event_pid *>self.event_struct).pid = value
 
+cdef class EventDataInfo(Event):
+    type = Event.register(EventDataInfo, scribe_api.SCRIBE_EVENT_DATA_INFO)
+
+    property user_ptr:
+        def __get__(self):
+            return (<scribe_api.scribe_event_data_info *>self.event_struct).user_ptr
+        def __set__(self, value):
+            (<scribe_api.scribe_event_data_info *>self.event_struct).user_ptr = value
+
+    property size:
+        def __get__(self):
+            return (<scribe_api.scribe_event_data_info *>self.event_struct).size
+        def __set__(self, value):
+            (<scribe_api.scribe_event_data_info *>self.event_struct).size = value
+
 cdef class EventData(EventSized):
     type = Event.register(EventData, scribe_api.SCRIBE_EVENT_DATA)
 
