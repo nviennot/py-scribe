@@ -197,11 +197,11 @@ cdef class EventResourceLockExtra(Event):
         def __set__(self, value):
             (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).type = value
 
-    property object:
+    property id:
         def __get__(self):
-            return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).object
+            return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).id
         def __set__(self, value):
-            (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).object = value
+            (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).id = value
 
     property serial:
         def __get__(self):
@@ -212,11 +212,11 @@ cdef class EventResourceLockExtra(Event):
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, scribe_api.SCRIBE_EVENT_RESOURCE_UNLOCK)
 
-    property object:
+    property id:
         def __get__(self):
-            return (<scribe_api.scribe_event_resource_unlock *>self.event_struct).object
+            return (<scribe_api.scribe_event_resource_unlock *>self.event_struct).id
         def __set__(self, value):
-            (<scribe_api.scribe_event_resource_unlock *>self.event_struct).object = value
+            (<scribe_api.scribe_event_resource_unlock *>self.event_struct).id = value
 
 cdef class EventRdtsc(Event):
     type = Event.register(EventRdtsc, scribe_api.SCRIBE_EVENT_RDTSC)

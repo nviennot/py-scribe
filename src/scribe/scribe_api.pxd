@@ -160,11 +160,11 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_resource_lock_extra:
         scribe_event h
         __u8 type
-        __u32 object
+        __u32 id
         __u32 serial
 
     struct scribe_event_resource_unlock:
-        __u32 object
+        __u32 id
         scribe_event h
 
     struct scribe_event_rdtsc:
