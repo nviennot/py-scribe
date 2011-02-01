@@ -45,7 +45,7 @@ def main():
     signal.signal(signal.SIGUSR1, do_stop)
 
     ps.scribe_wait()
-    if stop_requested[0]:
+    if stop_requested[0] or options.golive_bookmark_id:
         print("Replay stopped", file=sys.stderr)
     ps.wait()
 
