@@ -285,9 +285,9 @@ class Popen(subprocess.Popen, Context):
                  startupinfo=startupinfo, creationflags=creationflags)
 
 
-    def __del__(self, _maxsize=sys.maxsize, _active=subprocess._active):
+    def __del__(self):
         Context.__del__(self)
-        subprocess.Popen.__del__(self, _maxsize=_maxsize, _active=_active)
+        subprocess.Popen.__del__(self)
 
     def scribe_wait(self):
         Context.wait(self)
