@@ -321,6 +321,8 @@ cdef extern from "linux/scribe_api.h" nogil:
     size_t sizeof_event(scribe_event *event)
 
 cdef extern from "scribe.h" nogil:
+    enum: SCRIBE_CUSTOM_INIT
+
     struct scribe_context
     ctypedef scribe_context *scribe_context_t
 

@@ -32,6 +32,9 @@ def main():
     parser.add_option("-n", "--no-mm",
            action='store_true', dest='no_mm', default=False,
            help='Disable the memory tracking')
+    parser.add_option('-i', '--init',
+           action='store_true', dest='custom_init', default=False,
+           help="Don't use the default init process")
 
     parser.disable_interspersed_args()
     (options, cmd) = parser.parse_args()
@@ -52,6 +55,8 @@ def main():
 
     disable_flags = [0, scribe.SCRIBE_DISABLE_MM][options.no_mm]
     flags = (enable_flags & scribe.SCRIBE_ALL) | disable_flags
+    if options.custom_init:
+        flags |= scribe.SCRIBE_CUSTOM_INIT
     ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
                       flags = flags)
 
