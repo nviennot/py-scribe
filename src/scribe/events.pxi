@@ -197,6 +197,12 @@ cdef class EventResourceLockExtra(Event):
         def __set__(self, value):
             (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).type = value
 
+    property write_access:
+        def __get__(self):
+            return bool((<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).write_access)
+        def __set__(self, value):
+            (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).write_access = value
+
     property id:
         def __get__(self):
             return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).id
