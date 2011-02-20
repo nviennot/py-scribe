@@ -377,6 +377,12 @@ cdef class EventMemAlone(Event):
 cdef class EventRegs(Event):
     type = Event.register(EventRegs, scribe_api.SCRIBE_EVENT_REGS)
 
+    property args:
+        def __get__(self):
+            cdef pt_regs *regs
+            regs = &(<scribe_api.scribe_event_regs *>self.event_struct).regs
+            return [regs.ebx, regs.ecx, regs.edx, regs.esi, regs.edi]
+
 cdef class EventBookmark(Event):
     type = Event.register(EventBookmark, scribe_api.SCRIBE_EVENT_BOOKMARK)
 
