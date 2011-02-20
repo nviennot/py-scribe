@@ -46,7 +46,7 @@ cdef object pstr_to_dict(char_p_const *array):
     cdef bytes s
     while array != NULL and array[0] != NULL:
         s = array[0]
-        kv = s.decode().split('=')
+        kv = unicode(s, 'utf8').split('=')
         dct[kv[0]] = kv[1]
         array = array+1
     return dct
@@ -57,7 +57,7 @@ cdef object pstr_to_list(char_p_const *array):
     cdef bytes s
     while array != NULL and array[0] != NULL:
         s = array[0]
-        lst.append(s.decode())
+        lst.append(unicode(s, 'utf8'))
         array = array+1
     return lst
 

@@ -6,7 +6,7 @@ cimport cpython
 import os
 
 def Event_from_bytes(bytes buffer):
-    cls, _, _ = Event_get_type_info(buffer[0])
+    cls, _, _ = Event_get_type_info(ord(buffer[0:1]))
     return cls(buffer)
 
 def Event_get_type_info(type):

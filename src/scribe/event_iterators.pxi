@@ -42,7 +42,7 @@ cdef class EventsFromBuffer:
         if self.offset >= len(self.buffer):
             raise StopIteration
 
-        type = self.buffer[self.offset]
+        type = ord(self.buffer[self.offset:self.offset+1])
         cls, size, is_sized_event = Event_get_type_info(type)
 
         if is_sized_event:
