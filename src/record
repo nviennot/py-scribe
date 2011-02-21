@@ -3,11 +3,20 @@
 import sys
 import scribe
 import signal
+import logging
 from optparse import OptionParser
 
 # - Send a SIGUSR1 signal to stop the recording without aborting the recorded
 #   program.
 # - Send a SIGUSR2 signal to make a bookmark request.
+
+def configure_logging():
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    ch = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter("%(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
 def main():
     usage = 'usage: %prog [options] command [argument ...]'
@@ -35,6 +44,8 @@ def main():
     parser.add_option('-i', '--custom-init',
            action='store_true', dest='custom_init', default=False,
            help="Don't use the default init process")
+
+    configure_logging()
 
     parser.disable_interspersed_args()
     (options, cmd) = parser.parse_args()
@@ -66,12 +77,12 @@ def main():
             ps.stop()
             stop_requested[0] = True
         except OSError as e:
-            print("Cannot request to stop (%s)" % str(e), file=sys.stderr)
+            logging.error("Cannot request to stop (%s)" % str(e))
     def do_bookmark(signum, stack):
         try:
             ps.bookmark()
         except OSError as e:
-            print("Cannot request bookmark (%s)" % str(e), file=sys.stderr)
+            logging.error("Cannot request bookmark (%s)" % str(e))
     signal.signal(signal.SIGUSR1, do_stop)
     signal.signal(signal.SIGUSR2, do_bookmark)
     signal.signal(signal.SIGALRM, do_bookmark)
@@ -86,9 +97,8 @@ def main():
         signal.setitimer(signal.ITIMER_REAL, 0)
 
     if stop_requested[0]:
-        print("Recording stopped", file=sys.stderr)
+        logging.info("Recording stopped")
     ps.wait()
-
 
 if __name__ == '__main__':
     main()

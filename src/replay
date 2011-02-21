@@ -4,9 +4,18 @@ import scribe
 import sys
 import mmap
 import signal
+import logging
 from optparse import OptionParser
 
 # Send a SIGUSR1 signal to go live when it can
+
+def configure_logging():
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    ch = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter("%(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
 def main():
     usage = 'usage: %prog [options] log_file'
@@ -23,6 +32,8 @@ def main():
     parser.add_option('-g', '--golive', dest='golive_bookmark_id',
             metavar='BOOKMARK_ID', type='int', default=None,
             help='Specify a specific bookmark to go live with')
+
+    configure_logging()
 
     (options, args) = parser.parse_args()
     if not args:
@@ -41,12 +52,12 @@ def main():
             ps.stop()
             stop_requested[0] = True
         except OSError as e:
-            print("Cannot request to stop (%s)" % str(e), file=sys.stderr)
+            logging.error("Cannot request to stop (%s)" % str(e))
     signal.signal(signal.SIGUSR1, do_stop)
 
     ps.scribe_wait()
     if stop_requested[0] or options.golive_bookmark_id:
-        print("Replay stopped", file=sys.stderr)
+        logging.info("Replay stopped")
     ps.wait()
 
 if __name__ == '__main__':
