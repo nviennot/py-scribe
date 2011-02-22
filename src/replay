@@ -32,6 +32,10 @@ def main():
     parser.add_option('-g', '--golive', dest='golive_bookmark_id',
             metavar='BOOKMARK_ID', type='int', default=None,
             help='Specify a specific bookmark to go live with')
+    parser.add_option('-c', '--check-deadlock', dest='check_deadlock',
+           metavar='INTERVAL', type='float', default=0,
+           help='Check for deadlocks every INTERVAL seconds ' \
+                '(floats are okey)')
 
     configure_logging()
 
@@ -53,7 +57,17 @@ def main():
             stop_requested[0] = True
         except OSError as e:
             logging.error("Cannot request to stop (%s)" % str(e))
+    def do_check_deadlock(signum, stack):
+        try:
+            ps.check_deadlock()
+        except OSError as e:
+            logging.error("Cannot check for deadlock (%s)" % str(e))
     signal.signal(signal.SIGUSR1, do_stop)
+    signal.signal(signal.SIGALRM, do_check_deadlock)
+
+    if options.check_deadlock:
+        signal.setitimer(signal.ITIMER_REAL,
+                         options.check_deadlock, options.check_deadlock)
 
     ps.scribe_wait()
     if stop_requested[0] or options.golive_bookmark_id:

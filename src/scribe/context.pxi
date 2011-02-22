@@ -236,6 +236,11 @@ cdef class Context:
         if err:
             raise OSError(errno, os.strerror(errno))
 
+    def check_deadlock(self):
+        err = scribe_api.scribe_bookmark(self._ctx)
+        if err:
+            raise OSError(errno, os.strerror(errno))
+
     def init_loader(self, argv, envp):
         pass
 

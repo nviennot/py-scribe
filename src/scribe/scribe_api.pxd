@@ -342,5 +342,6 @@ cdef extern from "scribe.h" nogil:
 
     int scribe_stop(scribe_context_t ctx)
     int scribe_bookmark(scribe_context_t ctx)
+    int scribe_check_deadlock(scribe_context_t ctx)
 
     char *scribe_get_event_str(char *str, size_t size, scribe_event *event)
