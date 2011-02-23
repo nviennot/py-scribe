@@ -42,7 +42,7 @@ cdef class Event:
             h = {'type': type}
             header = cpython.PyBytes_FromStringAndSize(<char *>&h,
                                                        sizeof(scribe_api.scribe_event))
-            self.event = header + bytes(event_size - len(header))
+            self.event = header + bytes(bytearray(event_size - len(header)))
         else:
             assert event_size == len(event)
             self.event = event
