@@ -138,11 +138,11 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_syscall:
         scribe_event h
-        __u32 ret
+        __s32 ret
 
     struct scribe_event_syscall_extra:
         scribe_event h
-        __u32 ret
+        __s32 ret
         __u16 nr
 
     struct scribe_event_syscall_end:
@@ -296,7 +296,7 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_diverge_syscall_ret:
         scribe_event_diverge h
-        __u32 ret
+        __s32 ret
 
     struct scribe_event_diverge_fence_serial:
         scribe_event_diverge h
