@@ -237,7 +237,7 @@ cdef class Context:
             raise OSError(errno, os.strerror(errno))
 
     def check_deadlock(self):
-        err = scribe_api.scribe_bookmark(self._ctx)
+        err = scribe_api.scribe_check_deadlock(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
 

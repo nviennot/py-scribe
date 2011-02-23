@@ -79,6 +79,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_BOOKMARK_REQUEST
         SCRIBE_EVENT_GOLIVE_ON_NEXT_BOOKMARK
         SCRIBE_EVENT_GOLIVE_ON_BOOKMARK_ID
+        SCRIBE_EVENT_CHECK_DEADLOCK
         # kernel -> userspace notifications
         SCRIBE_EVENT_BACKTRACE
         SCRIBE_EVENT_CONTEXT_IDLE
