@@ -47,6 +47,9 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_RES_TYPE_MMAP
     enum: SCRIBE_RES_SPINLOCK
 
+    enum: SCRIBE_INJECT_ACTION_SLEEP
+    enum: SCRIBE_INJECT_ACTION_PSFLAGS
+
     enum: __NR_socket
     enum: __NR_bind
     enum: __NR_connect
@@ -90,6 +93,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_SYSCALL
         SCRIBE_EVENT_SYSCALL_EXTRA
         SCRIBE_EVENT_SYSCALL_END
+        SCRIBE_EVENT_INJECT_ACTION
         SCRIBE_EVENT_QUEUE_EOF
         SCRIBE_EVENT_RESOURCE_LOCK
         SCRIBE_EVENT_RESOURCE_LOCK_INTR
@@ -186,6 +190,12 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_syscall_end:
         scribe_event h
+
+    struct scribe_event_inject_action:
+        scribe_event h
+        __u32 action
+        __u32 arg1
+        __u32 arg2
 
     struct scribe_event_queue_eof:
         scribe_event h

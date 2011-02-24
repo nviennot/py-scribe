@@ -501,6 +501,34 @@ cdef class EventDivergeSyscallRet(EventDiverge):
         def __set__(self, value):
             (<scribe_api.scribe_event_diverge_syscall_ret *> self.event_struct).ret = value
 
+cdef class EventInjectAction(Event):
+    type = Event.register(EventInjectAction,
+                          scribe_api.SCRIBE_EVENT_INJECT_ACTION)
+
+    property action:
+        def __get__(self):
+            return (<scribe_api.scribe_event_inject_action *>
+                     self.event_struct).action
+        def __set__(self, value):
+            (<scribe_api.scribe_event_inject_action *>
+              self.event_struct).action = value
+
+    property arg1:
+        def __get__(self):
+            return (<scribe_api.scribe_event_inject_action *>
+                     self.event_struct).arg1
+        def __set__(self, value):
+            (<scribe_api.scribe_event_inject_action *>
+              self.event_struct).arg1 = value
+
+    property arg2:
+        def __get__(self):
+            return (<scribe_api.scribe_event_inject_action *>
+                     self.event_struct).arg2
+        def __set__(self, value):
+            (<scribe_api.scribe_event_inject_action *>
+              self.event_struct).arg2 = value
+
 cdef class EventDivergeFenceSerial(EventDiverge):
     type = Event.register(EventDivergeFenceSerial,
                           scribe_api.SCRIBE_EVENT_DIVERGE_FENCE_SERIAL)
