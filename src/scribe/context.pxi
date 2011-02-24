@@ -170,9 +170,12 @@ cdef class Context:
         if self._ctx:
             scribe_api.scribe_context_destroy(self._ctx)
 
-    def record(self, args, env, flags=scribe_api.SCRIBE_DEFAULT):
+    def record(self, args, env, cwd=None, chroot=None,
+               flags=scribe_api.SCRIBE_DEFAULT):
         cdef char **_args = NULL
         cdef char **_env = NULL
+        cdef char *_cwd = NULL
+        cdef char *_chroot = NULL
 
         bargs = list(arg.encode() for arg in args)
         if env is not None:
@@ -183,8 +186,16 @@ cdef class Context:
             if env is not None:
                 _env = list_to_pstr(benv)
 
+            if cwd:
+                cwd = cwd.encode()
+                _cwd = cwd
+            if chroot:
+                chroot = chroot.encode()
+                _chroot = chroot
+
             pid = scribe_api.scribe_record(self._ctx, flags,
-                                self.logfile.fileno(), _args, _env)
+                                           self.logfile.fileno(), _args, _env,
+                                           _cwd, _chroot)
             if pid < 0:
                 raise OSError(errno, os.strerror(errno))
             return pid
@@ -256,7 +267,7 @@ class Popen(subprocess.Popen, Context):
     def __init__(self, logfile, args=None, bufsize=0, executable=None,
                  stdin=None, stdout=None, stderr=None,
                  preexec_fn=None, close_fds=True, shell=False,
-                 cwd=None, env=None, universal_newlines=False,
+                 cwd=None, chroot=None, env=None, universal_newlines=False,
                  record=False, replay=False,
                  backtrace_len=100, show_dmesg=False,
                  golive_bookmark_id=None,
@@ -271,14 +282,15 @@ class Popen(subprocess.Popen, Context):
         if record and not args:
             raise ValueError('Please provide some arguments')
         if replay:
-            if args or env or cwd:
-                raise ValueError('During replay args,env,cwd cannot be '
-                                 'specified')
+            if args or env or cwd or chroot:
+                raise ValueError('During replay args, env, cwd, chroot '
+                                 'cannot be specified')
 
         self.do_record = record
         self.backtrace_len = backtrace_len
         self.golive_bookmark_id = golive_bookmark_id
         self.flags = flags
+        self.chroot = chroot
 
         Context.__init__(self, logfile, has_init_loader = True,
                          show_dmesg=show_dmesg)
@@ -339,8 +351,7 @@ class Popen(subprocess.Popen, Context):
             if close_fds:
                 self._close_fds(but=errpipe_write)
 
-            if cwd is not None:
-                os.chdir(cwd)
+            # We don't need to cwd because it's done by libscribe
 
             if preexec_fn:
                 preexec_fn()
@@ -406,7 +417,8 @@ class Popen(subprocess.Popen, Context):
                 gc.disable()
                 try:
                     if self.do_record:
-                        self.pid = self.record(args, env, self.flags)
+                        self.pid = self.record(args, env, cwd,
+                                               self.chroot, self.flags)
                     else:
                         self.pid = self.replay(self.backtrace_len,
                                                self.golive_bookmark_id)

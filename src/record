@@ -44,6 +44,10 @@ def main():
     parser.add_option('-i', '--custom-init',
            action='store_true', dest='custom_init', default=False,
            help="Don't use the default init process")
+    parser.add_option('-c', '--cwd', dest='cwd',
+           help="Start the recorded process in a specific directory")
+    parser.add_option('-r', '--chroot', dest='chroot',
+           help="Start the recorded process in a specific root")
 
     configure_logging()
 
@@ -69,6 +73,7 @@ def main():
     if options.custom_init:
         flags |= scribe.SCRIBE_CUSTOM_INIT
     ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
+                      cwd = options.cwd, chroot = options.chroot,
                       flags = flags)
 
     stop_requested = [False]

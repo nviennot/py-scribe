@@ -337,8 +337,11 @@ cdef extern from "scribe.h" nogil:
     int scribe_context_destroy(scribe_context_t ctx)
 
     pid_t scribe_record(scribe_context_t ctx, int flags, int log_fd,
-                        char_p_const *argv, char_p_const *envp)
-    pid_t scribe_replay(scribe_context_t ctx, int flags, int log_fd, int backtrace_len, int golive_bookmark_id)
+                        char_p_const *argv, char_p_const *envp,
+                        char *cwd, char *chroot)
+    pid_t scribe_replay(scribe_context_t ctx, int flags, int log_fd,
+                        int backtrace_len, int golive_bookmark_id)
+
     int scribe_wait(scribe_context_t ctx)
 
     int scribe_stop(scribe_context_t ctx)
