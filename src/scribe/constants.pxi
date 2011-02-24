@@ -46,6 +46,9 @@ SCRIBE_RES_TYPE_MMAP          = scribe_api.SCRIBE_RES_TYPE_MMAP
 SCRIBE_RES_TYPE_PPID          = scribe_api.SCRIBE_RES_TYPE_PPID
 SCRIBE_RES_SPINLOCK           = scribe_api.SCRIBE_RES_SPINLOCK
 
+SCRIBE_INJECT_ACTION_SLEEP    = scribe_api.SCRIBE_INJECT_ACTION_SLEEP
+SCRIBE_INJECT_ACTION_PSFLAGS  = scribe_api.SCRIBE_INJECT_ACTION_PSFLAGS
+
 __NR_socket                   = scribe_api.__NR_socket
 __NR_bind                     = scribe_api.__NR_bind
 __NR_connect                  = scribe_api.__NR_connect
