@@ -91,6 +91,36 @@ class DivergeError(Exception):
         self.backtrace_offsets = backtrace_offsets
         self.additional_trace = additional_trace
 
+    def _get_events(self, it):
+        cdef int bt_index
+        cdef int bt_length
+        cdef __u64 info_offset
+        cdef __u64 bt_offset
+
+        events = dict()
+
+        sorted_offsets = list(self.backtrace_offsets)
+        sorted_offsets.sort()
+        bt_index = 0
+        bt_length = len(sorted_offsets)
+        for info, event in it:
+            while True:
+                info_offset = info.offset
+                bt_offset = sorted_offsets[bt_index]
+
+                if info_offset < bt_offset:
+                    break;
+
+                if info_offset == bt_offset:
+                    events[info.offset] = (info, event)
+
+                bt_index = bt_index + 1
+                if bt_index == bt_length:
+                    return events
+
+        # We are missing events, but it's better than nothing
+        return events
+
     def _dump_backtrace(self):
         strs = []
         strs.append("Backtrace (%d events):" % len(self.backtrace_offsets))
@@ -102,12 +132,9 @@ class DivergeError(Exception):
             strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
-        events = dict()
         it = EventsFromBuffer(logfile_map, remove_annotations=False)
         try:
-            for info, event in it:
-                if info.offset in self.backtrace_offsets:
-                    events[info.offset] = (info, event)
+            events = self._get_events(it)
         except:
             strs.append("The log file is invalid...")
 
@@ -119,8 +146,6 @@ class DivergeError(Exception):
                                                  "  " * info.res_depth,
                                                  event))
             except:
-                # That must be an EventPid of EventSyscallEnd, we don't have
-                # them in the list.
                 strs.append("unknown event offset = %d" % offset)
         return strs
 
