@@ -41,6 +41,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_RES_TYPE_PID
     enum: SCRIBE_RES_TYPE_FUTEX
     enum: SCRIBE_RES_TYPE_IPC
+    enum: SCRIBE_RES_TYPE_CRED
     enum: SCRIBE_RES_SPINLOCK
 
     enum scribe_event_type:
