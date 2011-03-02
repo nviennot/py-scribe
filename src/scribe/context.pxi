@@ -194,6 +194,7 @@ cdef class Context:
     def __del__(self):
         if self._ctx:
             scribe_api.scribe_context_destroy(self._ctx)
+            self._ctx = NULL
 
     def record(self, args, env, cwd=None, chroot=None,
                flags=scribe_api.SCRIBE_DEFAULT):
