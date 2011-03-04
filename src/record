@@ -4,6 +4,7 @@ import sys
 import scribe
 import signal
 import logging
+import errno
 from optparse import OptionParser
 
 # - Send a SIGUSR1 signal to stop the recording without aborting the recorded
@@ -87,7 +88,8 @@ def main():
         try:
             ps.bookmark()
         except OSError as e:
-            logging.error("Cannot request bookmark (%s)" % str(e))
+            if e.errno != errno.EPERM:
+                logging.error("Cannot request bookmark (%s)" % str(e))
     signal.signal(signal.SIGUSR1, do_stop)
     signal.signal(signal.SIGUSR2, do_bookmark)
     signal.signal(signal.SIGALRM, do_bookmark)

@@ -5,6 +5,7 @@ import sys
 import mmap
 import signal
 import logging
+import errno
 from optparse import OptionParser
 
 # Send a SIGUSR1 signal to go live when it can
@@ -65,7 +66,8 @@ def main():
         try:
             ps.check_deadlock()
         except OSError as e:
-            logging.error("Cannot check for deadlock (%s)" % str(e))
+            if e.errno != errno.EPERM:
+                logging.error("Cannot check for deadlock (%s)" % str(e))
     signal.signal(signal.SIGUSR1, do_stop)
     signal.signal(signal.SIGALRM, do_check_deadlock)
 
