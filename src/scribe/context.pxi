@@ -247,21 +247,22 @@ cdef class Context:
             err = scribe_api.scribe_wait(self._ctx)
             if err == 0:
                 break
-            if err == -2 and errno == EINTR:
+            _errno = errno
+            if err == -2 and _errno == EINTR:
                 cpython.PyErr_CheckSignals()
                 continue
-            if errno == scribe_api.EDIVERGE or self.log_offsets:
+            if _errno == scribe_api.EDIVERGE or self.log_offsets:
                 dmesg = None
                 if self.show_dmesg:
                     ps = subprocess.Popen('dmesg', stdout=subprocess.PIPE)
                     (dmesg, _) = ps.communicate()
                     dmesg = dmesg.decode()
-                raise DivergeError(err = errno,
+                raise DivergeError(err = _errno,
                                    event = self.diverge_event,
                                    logfile = self.logfile,
                                    backtrace_offsets = self.log_offsets,
                                    additional_trace = dmesg)
-            raise OSError(errno, os.strerror(errno))
+            raise OSError(_errno, os.strerror(_errno))
 
     def stop(self):
         err = scribe_api.scribe_stop(self._ctx)
