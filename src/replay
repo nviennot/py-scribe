@@ -9,9 +9,9 @@ from optparse import OptionParser
 
 # Send a SIGUSR1 signal to go live when it can
 
-def configure_logging():
+def configure_logging(level=logging.DEBUG):
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(level)
     ch = logging.StreamHandler(sys.stderr)
     formatter = logging.Formatter("%(message)s")
     ch.setFormatter(formatter)
@@ -36,14 +36,18 @@ def main():
            metavar='INTERVAL', type='float', default=0,
            help='Check for deadlocks every INTERVAL seconds ' \
                 '(floats are okey)')
-
-    configure_logging()
+    parser.add_option("-q", "--quiet",
+            action="store_true", dest="quiet", default=False,
+            help="Don't print the diverge error")
 
     (options, args) = parser.parse_args()
     if not args:
         parser.error('Give me a log file')
     if len(args) > 2:
         parser.error('You have extra arguments')
+
+    configure_logging((logging.DEBUG, logging.INFO)[options.quiet])
+
     logfile = open(args[0], 'r')
 
     ps = scribe.Popen(logfile, replay = True, show_dmesg = options.dmesg,
@@ -69,7 +73,12 @@ def main():
         signal.setitimer(signal.ITIMER_REAL,
                          options.check_deadlock, options.check_deadlock)
 
-    ps.scribe_wait()
+    try:
+        ps.scribe_wait()
+    except scribe.DivergeError as derr:
+        logging.debug(str(derr))
+        exit(derr.err)
+
     if stop_requested[0] or options.golive_bookmark_id:
         logging.info("Replay stopped")
     ps.wait()
