@@ -45,6 +45,40 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_RES_TYPE_PTRACE
     enum: SCRIBE_RES_SPINLOCK
 
+    enum: __NR_socket
+    enum: __NR_bind
+    enum: __NR_connect
+    enum: __NR_listen
+    enum: __NR_accept
+    enum: __NR_getsockname
+    enum: __NR_getpeername
+    enum: __NR_socketpair
+    enum: __NR_send
+    enum: __NR_recv
+    enum: __NR_sendto
+    enum: __NR_recvfrom
+    enum: __NR_shutdown
+    enum: __NR_setsockopt
+    enum: __NR_getsockopt
+    enum: __NR_sendmsg
+    enum: __NR_recvmsg
+    enum: __NR_accept4
+    enum: __NR_recvmmsg2
+
+    enum: __NR_futex_wait
+    enum: __NR_futex_wake
+    enum: __NR_futex_fd
+    enum: __NR_futex_requeue
+    enum: __NR_futex_cmp_requeue
+    enum: __NR_futex_wake_op
+    enum: __NR_futex_lock_pi
+    enum: __NR_futex_unlock_pi
+    enum: __NR_futex_trylock_pi
+    enum: __NR_futex_wait_bitset
+    enum: __NR_futex_wake_bitset
+    enum: __NR_futex_wait_requeue_pi
+    enum: __NR_futex_cmp_requeue_pi
+
     enum scribe_event_type:
         SCRIBE_EVENT_INIT
         SCRIBE_EVENT_PID
