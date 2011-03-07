@@ -148,6 +148,7 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     struct scribe_event_init:
         scribe_event_sized h
+        __u32 flags
         __u16 argc
         __u16 envc
         __u8 data[0]

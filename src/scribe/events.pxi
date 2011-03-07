@@ -84,6 +84,12 @@ cdef class EventDiverge(Event):
 cdef class EventInit(EventSized):
     type = Event.register(EventInit, scribe_api.SCRIBE_EVENT_INIT)
 
+    property flags:
+        def __get__(self):
+            return (<scribe_api.scribe_event_init *>self.event_struct).flags
+        def __set__(self, value):
+            (<scribe_api.scribe_event_init *>self.event_struct).flags = value
+
 cdef class EventPid(Event):
     type = Event.register(EventPid, scribe_api.SCRIBE_EVENT_PID)
 
