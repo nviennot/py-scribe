@@ -7,6 +7,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_SYSCALL_EXTRA
     enum: SCRIBE_SIG_COOKIE
     enum: SCRIBE_RES_EXTRA
+    enum: SCRIBE_MEM_EXTRA
     enum: SCRIBE_DATA_EXTRA
     enum: SCRIBE_DATA_DET
     enum: SCRIBE_RES_ALWAYS

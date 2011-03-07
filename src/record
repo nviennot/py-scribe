@@ -32,6 +32,21 @@ def main():
            metavar='VERBOSITY', type='int', default=-1,
            help='Specify the verbosity of the recording in the log file. ' \
                 '0 results in a minimal log file, 15 is the opposite.')
+    parser.add_option('-f', '--flags', dest='flags',
+           metavar='FLAGS',
+           help='Manually specify the recording flags (mutually exclusive ' \
+                'with the log verbosity option).                          ' \
+                'The argument is a string of the following characters:    ' \
+                '  s: Always include the syscall return value.            ' \
+                '  S: Add extra syscall information                       ' \
+                '  c: Record signal cookie dependencies                   ' \
+                '  r: Add extra resource information                      ' \
+                '  m: Add extra memory information                        ' \
+                '  d: Add extra data information                          ' \
+                '  D: Always record data transfers                        ' \
+                '  R: Always do resource locking, even when not necessary ' \
+                '  F: Always record fences                                ' \
+                '  p: Record the pt_regs')
     parser.add_option("-s", "--shell",
            action='store_true', dest='shell', default=False,
            help='Run the command through the shell')
@@ -67,7 +82,29 @@ def main():
     if options.log_verbosity == -1:
         enable_flags = scribe.SCRIBE_DEFAULT
     else:
+        if options.flags:
+            parser.error('--flags and --log-verbosity are mutually exclusive')
         enable_flags = ((1 << options.log_verbosity)-1) << 8
+
+    if options.flags:
+        flag_map = {
+                's': scribe.SCRIBE_SYSCALL_RET,
+                'S': scribe.SCRIBE_SYSCALL_EXTRA,
+                'c': scribe.SCRIBE_SIG_COOKIE,
+                'r': scribe.SCRIBE_RES_EXTRA,
+                'm': scribe.SCRIBE_MEM_EXTRA,
+                'd': scribe.SCRIBE_DATA_EXTRA,
+                'D': scribe.SCRIBE_DATA_DET,
+                'R': scribe.SCRIBE_RES_ALWAYS,
+                'F': scribe.SCRIBE_FENCE_ALWAYS,
+                'p': scribe.SCRIBE_REGS
+        }
+        enable_flags = 0
+        for c in options.flags:
+            try:
+                enable_flags |= flag_map[c]
+            except:
+                parser.error('Invalid flag: %s' % c)
 
     disable_flags = [0, scribe.SCRIBE_DISABLE_MM][options.no_mm]
     flags = (enable_flags & scribe.SCRIBE_ALL) | disable_flags
