@@ -43,6 +43,7 @@ def main():
                 '  r: Add extra resource information                      ' \
                 '  m: Add extra memory information                        ' \
                 '  d: Add extra data information                          ' \
+                '  g: Always record string data transfers                 ' \
                 '  D: Always record data transfers                        ' \
                 '  R: Always do resource locking, even when not necessary ' \
                 '  F: Always record fences                                ' \
@@ -94,7 +95,8 @@ def main():
                 'r': scribe.SCRIBE_RES_EXTRA,
                 'm': scribe.SCRIBE_MEM_EXTRA,
                 'd': scribe.SCRIBE_DATA_EXTRA,
-                'D': scribe.SCRIBE_DATA_DET,
+                'g': scribe.SCRIBE_DATA_STRING_ALWAYS,
+                'D': scribe.SCRIBE_DATA_ALWAYS,
                 'R': scribe.SCRIBE_RES_ALWAYS,
                 'F': scribe.SCRIBE_FENCE_ALWAYS,
                 'p': scribe.SCRIBE_REGS
