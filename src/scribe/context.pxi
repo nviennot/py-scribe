@@ -11,6 +11,7 @@ import pickle
 import traceback
 import mmap
 import signal
+from collections import deque
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
@@ -83,13 +84,15 @@ cdef scribe_api.scribe_operations scribe_ops_with_init_loader = {
 
 class DivergeError(Exception):
     def __init__(self, err, event, logfile, backtrace_offsets,
-                 backtrace_all_pids, additional_trace=None):
+                 backtrace_all_pids, backtrace_num_last_events,
+                 additional_trace=None):
         self.err = err
         self.event = event
         self.logfile = logfile
         self.has_backtrace = backtrace_offsets is not None
         self.backtrace_offsets = backtrace_offsets
         self.backtrace_all_pids = backtrace_all_pids
+        self.backtrace_num_last_events = backtrace_num_last_events
         self.additional_trace = additional_trace
 
     def _get_events(self, it):
@@ -142,20 +145,37 @@ class DivergeError(Exception):
         pid = None
         if not self.backtrace_all_pids and self.event:
             pid = self.event.pid
+        last_events = {}
 
+        def append_event_str(info, event):
+            strs.append("  [%02d] %s%s%s" % (info.pid,
+                                             ("", "    ")[info.in_syscall],
+                                             "  " * info.res_depth,
+                                             event))
         for offset in self.backtrace_offsets:
             try:
                 (info, event) = events[offset]
 
+                if self.backtrace_num_last_events:
+                    if not last_events.has_key(info.pid):
+                        last_events[info.pid] = deque()
+                    last_events[info.pid].append((info, event))
+                    if len(last_events[info.pid]) > self.backtrace_num_last_events:
+                        last_events[info.pid].popleft()
+
                 if pid and pid != info.pid:
                     continue
 
-                strs.append("  [%02d] %s%s%s" % (info.pid,
-                                                 ("", "    ")[info.in_syscall],
-                                                 "  " * info.res_depth,
-                                                 event))
+                append_event_str(info, event)
             except:
                 strs.append("unknown event offset = %d" % offset)
+
+        if self.backtrace_num_last_events:
+            strs.append("Last events of each known process:")
+            for pid in sorted(last_events.keys()):
+                for info, event in last_events[pid]:
+                    append_event_str(info, event)
+
         return strs
 
     def __str__(self):
@@ -239,10 +259,11 @@ cdef class Context:
             free(_env)
 
     def replay(self, backtrace_len=100, backtrace_all_pids=False,
-               golive_bookmark_id=None):
+               backtrace_num_last_events=0, golive_bookmark_id=None):
         self.log_offsets = None
         self.diverge_event = None
         self.backtrace_all_pids = backtrace_all_pids
+        self.backtrace_num_last_events = backtrace_num_last_events
         if self.show_dmesg:
             os.system('dmesg -c > /dev/null')
         if golive_bookmark_id is None:
@@ -273,6 +294,7 @@ cdef class Context:
                                    logfile = self.logfile,
                                    backtrace_offsets = self.log_offsets,
                                    backtrace_all_pids = self.backtrace_all_pids,
+                                   backtrace_num_last_events = self.backtrace_num_last_events,
                                    additional_trace = dmesg)
             raise OSError(_errno, os.strerror(_errno))
 
@@ -309,6 +331,7 @@ class Popen(subprocess.Popen, Context):
                  cwd=None, chroot=None, env=None, universal_newlines=False,
                  record=False, replay=False,
                  backtrace_len=100, backtrace_all_pids=False,
+                 backtrace_num_last_events=0,
                  show_dmesg=False, golive_bookmark_id=None,
                  flags=scribe_api.SCRIBE_DEFAULT,
                  startupinfo=None, creationflags=0):
@@ -327,8 +350,8 @@ class Popen(subprocess.Popen, Context):
 
         self.do_record = record
         self.backtrace_len = backtrace_len
-        self.backtrace_len = backtrace_len
         self.backtrace_all_pids = backtrace_all_pids
+        self.backtrace_num_last_events = backtrace_num_last_events
         self.golive_bookmark_id = golive_bookmark_id
         self.flags = flags
         self.chroot = chroot
@@ -463,6 +486,7 @@ class Popen(subprocess.Popen, Context):
                     else:
                         self.pid = self.replay(self.backtrace_len,
                                                self.backtrace_all_pids,
+                                               self.backtrace_num_last_events,
                                                self.golive_bookmark_id)
                 except:
                     if gc_was_enabled:

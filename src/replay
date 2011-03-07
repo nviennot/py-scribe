@@ -30,6 +30,9 @@ def main():
     parser.add_option("-p", "--backtrace-all-pids",
             action="store_true", dest="backtrace_all_pids",
             default=False, help='Show the backtrace of all pids on error')
+    parser.add_option("-l", "--last-events", dest="backtrace_num_last_events",
+            metavar='N', type='int', default=0,
+            help='Also show the last N events of each process')
     parser.add_option("-d", "--dmesg",
             action="store_true", dest="dmesg", default=False,
             help='Show a dmesg trace if the replay diverges')
@@ -57,6 +60,7 @@ def main():
     ps = scribe.Popen(logfile, replay = True, show_dmesg = options.dmesg,
                       backtrace_len = options.backtrace_len,
                       backtrace_all_pids = options.backtrace_all_pids,
+                      backtrace_num_last_events = options.backtrace_num_last_events,
                       golive_bookmark_id = options.golive_bookmark_id)
 
     stop_requested = [False]
