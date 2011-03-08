@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+import scribe
+import mmap
+import os
+from optparse import OptionParser
+
+def human_size(num):
+    for x in ['bytes','KB','MB','GB','TB']:
+        if num < 1024.0:
+            return "%3.1f%s" % (num, x)
+        num /= 1024.0
+
+def main():
+    usage = 'usage: %prog -o output input'
+    desc = 'Shrink a scribe log file'
+    parser = OptionParser(usage=usage, description=desc)
+
+    parser.add_option("-o", "--output", dest="output")
+
+    (options, args) = parser.parse_args()
+    if not args:
+        parser.error('Give me an input log file')
+    if len(args) > 2:
+        parser.error('You have extra arguments')
+    if not options.output:
+        parser.error('Give me an output log file')
+
+    src = args[0]
+    dst = options.output
+    # FIXME use stat() to compare if src == dst
+
+    with open(dst, 'w') as dst_logfile:
+        with open(src, 'r') as src_logfile:
+            src_logfile_map = mmap.mmap(src_logfile.fileno(), 0, prot=mmap.PROT_READ)
+            events = scribe.EventsFromBuffer(src_logfile_map, do_info=False)
+            for e in scribe.Shrinker(events, scribe.SCRIBE_ALL):
+                dst_logfile.write(e.encode())
+
+    src_size = os.path.getsize(src)
+    dst_size = os.path.getsize(dst)
+    ratio = 100.0 * (1.0 - (float(dst_size) / float(src_size)))
+    print("%s: %s" % (src, human_size(src_size)))
+    print("%s: %s" % (dst, human_size(dst_size)))
+    print("Reduced the log file by %.2f%%" % ratio)
+
+if __name__ == '__main__':
+    main()

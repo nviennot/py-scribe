@@ -19,5 +19,5 @@ setup(
                              sources = scribe_src,
                              depends = ['/usr/include/linux/scribe_api.h'],
                              libraries = ['scribe'])],
-    scripts=['src/record', 'src/replay', 'src/profiler']
+    scripts=['src/record', 'src/replay', 'src/profiler', 'src/shrink']
 )
