@@ -193,7 +193,7 @@ cdef class EventResourceLockIntr(Event):
     type = Event.register(EventResourceLockIntr,
                           scribe_api.SCRIBE_EVENT_RESOURCE_LOCK_INTR)
 
-cdef class EventResourceLockExtra(Event):
+cdef class EventResourceLockExtra(EventSized):
     type = Event.register(EventResourceLockExtra,
                           scribe_api.SCRIBE_EVENT_RESOURCE_LOCK_EXTRA)
 
@@ -220,6 +220,12 @@ cdef class EventResourceLockExtra(Event):
             return (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).serial
         def __set__(self, value):
             (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).serial = value
+
+    property desc:
+        def __get__(self):
+            return cpython.PyBytes_FromStringAndSize(
+                    <char *>(<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).desc,
+                    (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).h.size)
 
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, scribe_api.SCRIBE_EVENT_RESOURCE_UNLOCK)
