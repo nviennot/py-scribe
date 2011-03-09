@@ -64,7 +64,18 @@ cdef class Event:
         return self.event
 
 cdef class EventSized(Event):
-    pass
+
+    property payload:
+        def __get__(self):
+            return cpython.PyBytes_FromStringAndSize(
+                    (<char *>self.event_struct) + Event_size_from_type(self.type),
+                    (<scribe_api.scribe_event_data *>self.event_struct).h.size)
+        def __set__(self, value):
+            payload = bytes(value)
+            assert(len(payload) <= 0xFFFF)
+            self.event = self.event[0:Event_size_from_type(self.type)] + payload
+            self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self.event)
+            (<scribe_api.scribe_event_sized *>self.event_struct).size = len(payload)
 
 cdef class EventDiverge(Event):
 
@@ -125,9 +136,9 @@ cdef class EventData(EventSized):
 
     property data:
         def __get__(self):
-            return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_api.scribe_event_data *>self.event_struct).data,
-                    (<scribe_api.scribe_event_data *>self.event_struct).h.size)
+            return self.payload
+        def __set__(self, value):
+            self.payload = value
 
 cdef class EventDataExtra(EventSized):
     type = Event.register(EventDataExtra, scribe_api.SCRIBE_EVENT_DATA_EXTRA)
@@ -146,9 +157,9 @@ cdef class EventDataExtra(EventSized):
 
     property data:
         def __get__(self):
-            return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_api.scribe_event_data_extra *>self.event_struct).data,
-                    (<scribe_api.scribe_event_data_extra *>self.event_struct).h.size)
+            return self.payload
+        def __set__(self, value):
+            self.payload = value
 
 cdef class EventSyscall(Event):
     type = Event.register(EventSyscall, scribe_api.SCRIBE_EVENT_SYSCALL)
@@ -223,9 +234,9 @@ cdef class EventResourceLockExtra(EventSized):
 
     property desc:
         def __get__(self):
-            return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).desc,
-                    (<scribe_api.scribe_event_resource_lock_extra *>self.event_struct).h.size)
+            return self.payload
+        def __set__(self, value):
+            self.payload = value
 
 cdef class EventResourceUnlock(Event):
     type = Event.register(EventResourceUnlock, scribe_api.SCRIBE_EVENT_RESOURCE_UNLOCK)
@@ -262,9 +273,9 @@ cdef class EventSignal(EventSized):
 
     property info:
         def __get__(self):
-            return cpython.PyBytes_FromStringAndSize(
-                    <char *>(<scribe_api.scribe_event_signal *>self.event_struct).info,
-                    (<scribe_api.scribe_event_signal *>self.event_struct).h.size)
+            return self.payload
+        def __set__(self, value):
+            self.payload = value
 
 cdef class EventFence(Event):
     type = Event.register(EventFence, scribe_api.SCRIBE_EVENT_FENCE)
