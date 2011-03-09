@@ -60,6 +60,15 @@ cdef class Event:
         return scribe_api.scribe_get_event_str(buffer, sizeof(buffer),
                                     self.event_struct).decode()
 
+    def __copy__(self):
+        cdef int extra_size = len(self.event) - Event_size_from_type(self.type)
+        new_event = self.event + b'\x00'
+        new_event = new_event[0:-1]
+        return self.__class__(new_event, extra_size);
+
+    def clone(self):
+        return self.__copy__()
+
     def encode(self):
         return self.event
 
