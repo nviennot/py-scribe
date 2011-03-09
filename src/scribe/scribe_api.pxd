@@ -35,6 +35,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_DATA_STRING
     enum: SCRIBE_DATA_NON_DETERMINISTIC
     enum: SCRIBE_DATA_INTERNAL
+    enum: SCRIBE_DATA_NEED_INFO
     enum: SCRIBE_DATA_ZERO
 
     enum: SCRIBE_RES_TYPE_INODE

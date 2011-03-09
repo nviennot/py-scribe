@@ -115,7 +115,6 @@ cdef class Shrinker:
         flags_to_remove &= ~SCRIBE_SYSCALL_RET
         flags_to_remove &= ~SCRIBE_RES_ALWAYS
         flags_to_remove &= ~SCRIBE_FENCE_ALWAYS
-        flags_to_remove &= ~SCRIBE_DATA_EXTRA
 
         self.events = iter(events)
         self.flags_to_remove = flags_to_remove
@@ -123,7 +122,7 @@ cdef class Shrinker:
     def __iter__(self):
         return self
 
-    cdef _should_remove(self, f):
+    cdef _remove(self, f):
         return self.flags_to_remove & f
 
     def __next__(self):
@@ -133,51 +132,57 @@ cdef class Shrinker:
             # SCRIBE_DATA_STRING_ALWAYS and SCRIBE_DATA_ALWAYS
             if isinstance(e, EventDataExtra):
                 data_type = e.data_type
-                if self._should_remove(SCRIBE_DATA_STRING_ALWAYS):
+                if self._remove(SCRIBE_DATA_STRING_ALWAYS):
                     if data_type & SCRIBE_DATA_STRING:
                         continue
-                if self._should_remove(SCRIBE_DATA_ALWAYS):
+                if self._remove(SCRIBE_DATA_ALWAYS):
                     if (data_type & SCRIBE_DATA_NON_DETERMINISTIC) or \
                             (data_type & SCRIBE_DATA_INTERNAL):
+                        # SCRIBE_DATA_EXTRA
+                        if self._remove(SCRIBE_DATA_EXTRA) and \
+                                (not data_type & SCRIBE_DATA_NEED_INFO):
+                            new_e = EventData()
+                            new_e.data = e.data
+                            return new_e
                         return e
                 continue
 
             # SCRIBE_RES_EXTRA
             if isinstance(e, EventResourceLockExtra) and \
-                    self._should_remove(SCRIBE_RES_EXTRA):
+                    self._remove(SCRIBE_RES_EXTRA):
                 new_e = EventResourceLock()
                 new_e.serial = e.serial
                 return new_e
 
             if isinstance(e, EventResourceUnlock) and \
-                    self._should_remove(SCRIBE_RES_EXTRA):
+                    self._remove(SCRIBE_RES_EXTRA):
                 continue
 
             # SCRIBE_SYSCALL_EXTRA
             if isinstance(e, EventSyscallExtra) and \
-                    self._should_remove(SCRIBE_SYSCALL_EXTRA):
+                    self._remove(SCRIBE_SYSCALL_EXTRA):
                 new_e = EventSyscall()
                 new_e.ret = e.ret
                 return new_e
 
             if isinstance(e, EventSyscallEnd) and \
-                    self._should_remove(SCRIBE_SYSCALL_EXTRA):
+                    self._remove(SCRIBE_SYSCALL_EXTRA):
                 continue
 
             # SCRIBE_REGS
             if isinstance(e, EventRegs) and \
-                    self._should_remove(SCRIBE_REGS):
+                    self._remove(SCRIBE_REGS):
                 continue
 
             # SCRIBE_MEM_EXTRA
             if isinstance(e, EventMemOwnedReadExtra) and \
-                    self._should_remove(SCRIBE_MEM_EXTRA):
+                    self._remove(SCRIBE_MEM_EXTRA):
                 new_e = EventMemOwnedRead()
                 new_e.serial = e.serial
                 return new_e
 
             if isinstance(e, EventMemOwnedWriteExtra) and \
-                    self._should_remove(SCRIBE_MEM_EXTRA):
+                    self._remove(SCRIBE_MEM_EXTRA):
                 new_e = EventMemOwnedWrite()
                 new_e.serial = e.serial
                 return new_e
@@ -185,7 +190,7 @@ cdef class Shrinker:
             # SCRIBE_SIG_COOKIE
             if (isinstance(e, EventSigSendCookie) or \
                     isinstance(e, EventSigRecvCookie)) and \
-                    self._should_remove(SCRIBE_SIG_COOKIE):
+                    self._remove(SCRIBE_SIG_COOKIE):
                 continue
 
             if isinstance(e, EventInit):
