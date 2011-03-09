@@ -107,6 +107,7 @@ cdef class EventsFromBuffer:
 
 cdef class Shrinker:
     cdef object events
+    cdef object last_event
     cdef int flags_to_remove
 
     def __init__(self, events, flags_to_remove):
@@ -114,10 +115,10 @@ cdef class Shrinker:
         # Some flags are not removable
         flags_to_remove &= ~SCRIBE_SYSCALL_RET
         flags_to_remove &= ~SCRIBE_RES_ALWAYS
-        flags_to_remove &= ~SCRIBE_FENCE_ALWAYS
 
         self.events = iter(events)
         self.flags_to_remove = flags_to_remove
+        self.last_event = None
 
     def __iter__(self):
         return self
@@ -125,7 +126,7 @@ cdef class Shrinker:
     cdef _remove(self, f):
         return self.flags_to_remove & f
 
-    def __next__(self):
+    cdef _next_event(self):
         while True:
             e = self.events.next()
 
@@ -146,6 +147,13 @@ cdef class Shrinker:
                             return new_e
                         return e
                 continue
+
+            # SCRIBE_FENCE_ALWAYS
+            if isinstance(e, EventFence) and \
+                    self._remove(SCRIBE_FENCE_ALWAYS):
+                # A first approximation is to never have two consecutive fences
+                if isinstance(self.last_event, EventFence):
+                    continue
 
             # SCRIBE_RES_EXTRA
             if isinstance(e, EventResourceLockExtra) and \
@@ -198,3 +206,8 @@ cdef class Shrinker:
                 return e
 
             return e
+
+    def __next__(self):
+        e = self._next_event()
+        self.last_event = e
+        return e
