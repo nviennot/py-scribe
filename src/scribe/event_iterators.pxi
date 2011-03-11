@@ -133,20 +133,33 @@ cdef class Shrinker:
             # SCRIBE_DATA_STRING_ALWAYS and SCRIBE_DATA_ALWAYS
             if isinstance(e, EventDataExtra):
                 data_type = e.data_type
+                user_ptr = e.user_ptr
+
                 if self._remove(SCRIBE_DATA_STRING_ALWAYS):
                     if data_type & SCRIBE_DATA_STRING:
+                        assert(not (data_type & SCRIBE_DATA_NEED_INFO))
                         continue
+
+                if self._remove(SCRIBE_DATA_EXTRA) and \
+                        not (data_type & SCRIBE_DATA_NEED_INFO):
+                    new_e = EventData()
+                    new_e.data = e.data
+                    e = new_e
+
                 if self._remove(SCRIBE_DATA_ALWAYS):
-                    if (data_type & SCRIBE_DATA_NON_DETERMINISTIC) or \
-                            (data_type & SCRIBE_DATA_INTERNAL):
-                        # SCRIBE_DATA_EXTRA
-                        if self._remove(SCRIBE_DATA_EXTRA) and \
-                                (not data_type & SCRIBE_DATA_NEED_INFO):
-                            new_e = EventData()
-                            new_e.data = e.data
-                            return new_e
-                        return e
-                continue
+                    if not (data_type & (SCRIBE_DATA_NON_DETERMINISTIC | \
+                                         SCRIBE_DATA_INTERNAL)):
+                        # we can discard the data, it's useless
+
+                        if data_type & SCRIBE_DATA_NEED_INFO:
+                            new_e = EventDataInfo()
+                            new_e.user_ptr = user_ptr
+                            new_e.size = len(e.data)
+                            new_e.data_type = data_type
+                            e = new_e
+                        else:
+                            continue
+                return e
 
             # SCRIBE_FENCE_ALWAYS
             if isinstance(e, EventFence) and \
