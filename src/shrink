@@ -17,6 +17,9 @@ def main():
     parser = OptionParser(usage=usage, description=desc)
 
     parser.add_option("-o", "--output", dest="output")
+    parser.add_option("-b", "--remove-bookmarks",
+            action="store_true", dest="remove_bookmarks", default=False,
+            help="Remove all bookmarks")
 
     (options, args) = parser.parse_args()
     if not args:
@@ -34,7 +37,8 @@ def main():
         with open(src, 'r') as src_logfile:
             src_logfile_map = mmap.mmap(src_logfile.fileno(), 0, prot=mmap.PROT_READ)
             events = scribe.EventsFromBuffer(src_logfile_map, do_info=False)
-            for e in scribe.Shrinker(events, scribe.SCRIBE_ALL):
+            for e in scribe.Shrinker(events, scribe.SCRIBE_ALL,
+                                     options.remove_bookmarks):
                 dst_logfile.write(e.encode())
 
     src_size = os.path.getsize(src)

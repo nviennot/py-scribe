@@ -109,16 +109,19 @@ cdef class Shrinker:
     cdef object events
     cdef object last_event
     cdef int flags_to_remove
+    cdef bint remove_bookmarks
 
-    def __init__(self, events, flags_to_remove):
+    def __init__(self, events, flags_to_remove, remove_bookmarks=False):
 
         # Some flags are not removable
         flags_to_remove &= ~SCRIBE_SYSCALL_RET
         flags_to_remove &= ~SCRIBE_RES_ALWAYS
 
+
         self.events = iter(events)
         self.flags_to_remove = flags_to_remove
         self.last_event = None
+        self.remove_bookmarks = remove_bookmarks
 
     def __iter__(self):
         return self
@@ -212,6 +215,11 @@ cdef class Shrinker:
             if (isinstance(e, EventSigSendCookie) or \
                     isinstance(e, EventSigRecvCookie)) and \
                     self._remove(SCRIBE_SIG_COOKIE):
+                continue
+
+            # Bookmarks
+            if isinstance(e, EventBookmark) and \
+                    self.remove_bookmarks:
                 continue
 
             if isinstance(e, EventInit):
