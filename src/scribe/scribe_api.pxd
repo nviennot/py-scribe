@@ -29,6 +29,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_PS_ENABLE_SIGNAL
     enum: SCRIBE_PS_ENABLE_TSC
     enum: SCRIBE_PS_ENABLE_MM
+    enum: SCRIBE_PS_ENABLE_RET_CHECK
     enum: SCRIBE_PS_ENABLE_ALL
 
     enum: SCRIBE_DATA_INPUT
