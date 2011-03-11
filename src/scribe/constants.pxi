@@ -42,6 +42,7 @@ SCRIBE_RES_TYPE_PID           = scribe_api.SCRIBE_RES_TYPE_PID
 SCRIBE_RES_TYPE_FUTEX         = scribe_api.SCRIBE_RES_TYPE_FUTEX
 SCRIBE_RES_TYPE_IPC           = scribe_api.SCRIBE_RES_TYPE_IPC
 SCRIBE_RES_TYPE_MMAP          = scribe_api.SCRIBE_RES_TYPE_MMAP
+SCRIBE_RES_TYPE_PPID          = scribe_api.SCRIBE_RES_TYPE_PPID
 SCRIBE_RES_SPINLOCK           = scribe_api.SCRIBE_RES_SPINLOCK
 
 __NR_socket                   = scribe_api.__NR_socket
