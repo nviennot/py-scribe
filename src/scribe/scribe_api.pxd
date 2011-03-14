@@ -47,6 +47,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_RES_TYPE_IPC
     enum: SCRIBE_RES_TYPE_MMAP
     enum: SCRIBE_RES_TYPE_PPID
+    enum: SCRIBE_RES_TYPE_MASK
     enum: SCRIBE_RES_SPINLOCK
 
     enum: SCRIBE_INJECT_ACTION_SLEEP
