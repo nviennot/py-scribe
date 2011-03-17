@@ -140,6 +140,7 @@ def main():
     signal.signal(signal.SIGUSR2, do_bookmark)
     signal.signal(signal.SIGALRM, do_bookmark)
     signal.signal(signal.SIGTERM, do_exit)
+    signal.signal(signal.SIGINT, do_exit)
 
     if options.auto_bookmark:
         signal.setitimer(signal.ITIMER_REAL,
