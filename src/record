@@ -129,9 +129,17 @@ def main():
         except OSError as e:
             if e.errno != errno.EPERM:
                 logging.error("Cannot request bookmark (%s)" % str(e))
+
+    def do_exit(signum, stack):
+        try:
+            ps.kill()
+        except OSError as e:
+            logging.error("Cannot kill the recorded process")
+
     signal.signal(signal.SIGUSR1, do_stop)
     signal.signal(signal.SIGUSR2, do_bookmark)
     signal.signal(signal.SIGALRM, do_bookmark)
+    signal.signal(signal.SIGTERM, do_exit)
 
     if options.auto_bookmark:
         signal.setitimer(signal.ITIMER_REAL,
