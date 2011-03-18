@@ -367,6 +367,7 @@ cdef extern from "linux/scribe_api.h" nogil:
 
 cdef extern from "scribe.h" nogil:
     enum: SCRIBE_CUSTOM_INIT
+    enum: SCRIBE_CLONE_NEWNET
 
     struct scribe_context
     ctypedef scribe_context *scribe_context_t
