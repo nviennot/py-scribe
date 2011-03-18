@@ -87,3 +87,4 @@ __NR_futex_wake_bitset        = scribe_api.__NR_futex_wake_bitset
 # __NR_futex_cmp_requeue_pi     = scribe_api.__NR_futex_cmp_requeue_pi
 
 SCRIBE_CUSTOM_INIT            = scribe_api.SCRIBE_CUSTOM_INIT
+SCRIBE_CLONE_NEWNET           = scribe_api.SCRIBE_CLONE_NEWNET
