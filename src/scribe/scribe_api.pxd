@@ -273,40 +273,6 @@ cdef extern from "linux/scribe_api.h" nogil:
         __u32 cookie
 
 
-    struct scribe_event_attach_on_execve:
-        scribe_event h
-        __u8 enable
-
-    struct scribe_event_record:
-        scribe_event h
-        __u32 log_fd
-
-    struct scribe_event_replay:
-        scribe_event h
-        __u32 log_fd
-        __s32 backtrace_len
-
-    struct scribe_event_stop:
-        scribe_event h
-
-    struct scribe_event_bookmark_request:
-        scribe_event h
-
-    struct scribe_event_golive_on_next_bookmark:
-        scribe_event h
-
-    struct scribe_event_golive_on_bookmark_id:
-        scribe_event h
-        __u32 id
-
-    struct scribe_event_backtrace:
-        scribe_event h
-        __u64 event_offset
-
-    struct scribe_event_context_idle:
-        scribe_event h
-        __s32 error
-
     struct scribe_event_diverge_event_type:
         scribe_event_diverge h
         __u8 type
@@ -376,6 +342,9 @@ cdef extern from "scribe.h" nogil:
         void (*init_loader) (void *private_data, char_p_const *argv, char_p_const *envp)
         void (*on_backtrace) (void *private_data, loff_t *log_offset, int num)
         void (*on_diverge) (void *private_data, scribe_event_diverge *event)
+        void (*on_bookmark) (void *private_data, int id, int npr)
+
+    void scribe_default_init_loader(char_p_const *argv, char_p_const *envp)
 
     int scribe_context_create(scribe_context_t *pctx, scribe_operations *ops, void *private_data)
     int scribe_context_destroy(scribe_context_t ctx)
@@ -384,11 +353,12 @@ cdef extern from "scribe.h" nogil:
                         char_p_const *argv, char_p_const *envp,
                         char *cwd, char *chroot)
     pid_t scribe_replay(scribe_context_t ctx, int flags, int log_fd,
-                        int backtrace_len, int golive_bookmark_id)
+                        int backtrace_len)
 
     int scribe_wait(scribe_context_t ctx)
 
     int scribe_stop(scribe_context_t ctx)
+    int scribe_resume(scribe_context_t ctx)
     int scribe_bookmark(scribe_context_t ctx)
     int scribe_check_deadlock(scribe_context_t ctx)
 
