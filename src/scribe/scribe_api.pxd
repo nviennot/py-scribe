@@ -29,6 +29,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_PS_ENABLE_SIGNAL
     enum: SCRIBE_PS_ENABLE_TSC
     enum: SCRIBE_PS_ENABLE_MM
+    enum: SCRIBE_PS_ENABLE_RET_CHECK
     enum: SCRIBE_PS_ENABLE_ALL
 
     enum: SCRIBE_DATA_INPUT
@@ -45,6 +46,8 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_RES_TYPE_FUTEX
     enum: SCRIBE_RES_TYPE_IPC
     enum: SCRIBE_RES_TYPE_MMAP
+    enum: SCRIBE_RES_TYPE_PPID
+    enum: SCRIBE_RES_TYPE_MASK
     enum: SCRIBE_RES_SPINLOCK
 
     enum: SCRIBE_INJECT_ACTION_SLEEP
@@ -374,6 +377,7 @@ cdef extern from "linux/scribe_api.h" nogil:
 
 cdef extern from "scribe.h" nogil:
     enum: SCRIBE_CUSTOM_INIT
+    enum: SCRIBE_CLONE_NEWNET
 
     struct scribe_context
     ctypedef scribe_context *scribe_context_t

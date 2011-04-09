@@ -109,16 +109,19 @@ cdef class Shrinker:
     cdef object events
     cdef object last_event
     cdef int flags_to_remove
+    cdef bint remove_bookmarks
 
-    def __init__(self, events, flags_to_remove):
+    def __init__(self, events, flags_to_remove, remove_bookmarks=False):
 
         # Some flags are not removable
         flags_to_remove &= ~SCRIBE_SYSCALL_RET
         flags_to_remove &= ~SCRIBE_RES_ALWAYS
 
+
         self.events = iter(events)
         self.flags_to_remove = flags_to_remove
         self.last_event = None
+        self.remove_bookmarks = remove_bookmarks
 
     def __iter__(self):
         return self
@@ -133,20 +136,33 @@ cdef class Shrinker:
             # SCRIBE_DATA_STRING_ALWAYS and SCRIBE_DATA_ALWAYS
             if isinstance(e, EventDataExtra):
                 data_type = e.data_type
+                user_ptr = e.user_ptr
+
                 if self._remove(SCRIBE_DATA_STRING_ALWAYS):
                     if data_type & SCRIBE_DATA_STRING:
+                        assert(not (data_type & SCRIBE_DATA_NEED_INFO))
                         continue
+
+                if self._remove(SCRIBE_DATA_EXTRA) and \
+                        not (data_type & SCRIBE_DATA_NEED_INFO):
+                    new_e = EventData()
+                    new_e.data = e.data
+                    e = new_e
+
                 if self._remove(SCRIBE_DATA_ALWAYS):
-                    if (data_type & SCRIBE_DATA_NON_DETERMINISTIC) or \
-                            (data_type & SCRIBE_DATA_INTERNAL):
-                        # SCRIBE_DATA_EXTRA
-                        if self._remove(SCRIBE_DATA_EXTRA) and \
-                                (not data_type & SCRIBE_DATA_NEED_INFO):
-                            new_e = EventData()
-                            new_e.data = e.data
-                            return new_e
-                        return e
-                continue
+                    if not (data_type & (SCRIBE_DATA_NON_DETERMINISTIC | \
+                                         SCRIBE_DATA_INTERNAL)):
+                        # we can discard the data, it's useless
+
+                        if data_type & SCRIBE_DATA_NEED_INFO:
+                            new_e = EventDataInfo()
+                            new_e.user_ptr = user_ptr
+                            new_e.size = len(e.data)
+                            new_e.data_type = data_type
+                            e = new_e
+                        else:
+                            continue
+                return e
 
             # SCRIBE_FENCE_ALWAYS
             if isinstance(e, EventFence) and \
@@ -199,6 +215,11 @@ cdef class Shrinker:
             if (isinstance(e, EventSigSendCookie) or \
                     isinstance(e, EventSigRecvCookie)) and \
                     self._remove(SCRIBE_SIG_COOKIE):
+                continue
+
+            # Bookmarks
+            if isinstance(e, EventBookmark) and \
+                    self.remove_bookmarks:
                 continue
 
             if isinstance(e, EventInit):

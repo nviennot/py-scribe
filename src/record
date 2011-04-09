@@ -61,6 +61,9 @@ def main():
     parser.add_option('-i', '--custom-init',
            action='store_true', dest='custom_init', default=False,
            help="Don't use the default init process")
+    parser.add_option('-n', '--network-namespace',
+           action='store_true', dest='new_net', default=False,
+           help="Run the target in a network namespace")
     parser.add_option('-c', '--cwd', dest='cwd',
            help="Start the recorded process in a specific directory")
     parser.add_option('-r', '--chroot', dest='chroot',
@@ -112,6 +115,8 @@ def main():
     flags = (enable_flags & scribe.SCRIBE_ALL) | disable_flags
     if options.custom_init:
         flags |= scribe.SCRIBE_CUSTOM_INIT
+    if options.new_net:
+        flags |= scribe.SCRIBE_CLONE_NEWNET
     ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
                       cwd = options.cwd, chroot = options.chroot,
                       flags = flags)
@@ -129,9 +134,18 @@ def main():
         except OSError as e:
             if e.errno != errno.EPERM:
                 logging.error("Cannot request bookmark (%s)" % str(e))
+
+    def do_exit(signum, stack):
+        try:
+            ps.kill()
+        except OSError as e:
+            logging.error("Cannot kill the recorded process")
+
     signal.signal(signal.SIGUSR1, do_stop)
     signal.signal(signal.SIGUSR2, do_bookmark)
     signal.signal(signal.SIGALRM, do_bookmark)
+    signal.signal(signal.SIGTERM, do_exit)
+    signal.signal(signal.SIGINT, do_exit)
 
     if options.auto_bookmark:
         signal.setitimer(signal.ITIMER_REAL,

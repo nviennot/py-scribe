@@ -9,6 +9,7 @@ import errno
 from optparse import OptionParser
 
 # Send a SIGUSR1 signal to go live when it can
+# Send a SIGUSR2 signal to check for deadlocks
 
 def configure_logging(level=logging.DEBUG):
     logger = logging.getLogger()
@@ -78,6 +79,7 @@ def main():
                 logging.error("Cannot check for deadlock (%s)" % str(e))
     signal.signal(signal.SIGUSR1, do_stop)
     signal.signal(signal.SIGALRM, do_check_deadlock)
+    signal.signal(signal.SIGUSR2, do_check_deadlock)
 
     if options.check_deadlock:
         signal.setitimer(signal.ITIMER_REAL,

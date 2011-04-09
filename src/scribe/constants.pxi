@@ -26,6 +26,7 @@ SCRIBE_PS_ENABLE_RESOURCE     = scribe_api.SCRIBE_PS_ENABLE_RESOURCE
 SCRIBE_PS_ENABLE_SIGNAL       = scribe_api.SCRIBE_PS_ENABLE_SIGNAL
 SCRIBE_PS_ENABLE_TSC          = scribe_api.SCRIBE_PS_ENABLE_TSC
 SCRIBE_PS_ENABLE_MM           = scribe_api.SCRIBE_PS_ENABLE_MM
+SCRIBE_PS_ENABLE_RET_CHECK    = scribe_api.SCRIBE_PS_ENABLE_RET_CHECK
 SCRIBE_PS_ENABLE_ALL          = scribe_api.SCRIBE_PS_ENABLE_ALL
 
 SCRIBE_DATA_INPUT             = scribe_api.SCRIBE_DATA_INPUT
@@ -42,6 +43,8 @@ SCRIBE_RES_TYPE_PID           = scribe_api.SCRIBE_RES_TYPE_PID
 SCRIBE_RES_TYPE_FUTEX         = scribe_api.SCRIBE_RES_TYPE_FUTEX
 SCRIBE_RES_TYPE_IPC           = scribe_api.SCRIBE_RES_TYPE_IPC
 SCRIBE_RES_TYPE_MMAP          = scribe_api.SCRIBE_RES_TYPE_MMAP
+SCRIBE_RES_TYPE_PPID          = scribe_api.SCRIBE_RES_TYPE_PPID
+SCRIBE_RES_TYPE_MASK          = scribe_api.SCRIBE_RES_TYPE_MASK
 SCRIBE_RES_SPINLOCK           = scribe_api.SCRIBE_RES_SPINLOCK
 
 SCRIBE_INJECT_ACTION_SLEEP    = scribe_api.SCRIBE_INJECT_ACTION_SLEEP
@@ -84,3 +87,4 @@ __NR_futex_wake_bitset        = scribe_api.__NR_futex_wake_bitset
 # __NR_futex_cmp_requeue_pi     = scribe_api.__NR_futex_cmp_requeue_pi
 
 SCRIBE_CUSTOM_INIT            = scribe_api.SCRIBE_CUSTOM_INIT
+SCRIBE_CLONE_NEWNET           = scribe_api.SCRIBE_CLONE_NEWNET
