@@ -5,6 +5,7 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     enum: SCRIBE_SYSCALL_RET
     enum: SCRIBE_SYSCALL_EXTRA
+    enum: SCRIBE_SIG_EXTRA
     enum: SCRIBE_SIG_COOKIE
     enum: SCRIBE_RES_EXTRA
     enum: SCRIBE_MEM_EXTRA
@@ -112,6 +113,8 @@ cdef extern from "linux/scribe_api.h" nogil:
         SCRIBE_EVENT_BOOKMARK
         SCRIBE_EVENT_SIG_SEND_COOKIE
         SCRIBE_EVENT_SIG_RECV_COOKIE
+        SCRIBE_EVENT_SIG_HANDLED_COOKIE
+        SCRIBE_EVENT_SIG_HANDLED
         # userspace -> kernel commands
         SCRIBE_EVENT_ATTACH_ON_EXECVE
         SCRIBE_EVENT_RECORD
@@ -271,6 +274,14 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_sig_recv_cookie:
         scribe_event h
         __u32 cookie
+
+    struct scribe_event_sig_handled_cookie:
+        scribe_event h
+        __u32 cookie
+
+    struct scribe_event_sig_handled:
+        scribe_event h
+        __u8 nr
 
 
     struct scribe_event_diverge_event_type:

@@ -39,6 +39,7 @@ def main():
                 'The argument is a string of the following characters:    ' \
                 '  s: Always include the syscall return value.            ' \
                 '  S: Add extra syscall information                       ' \
+                '  h: Record signal handler extra information             ' \
                 '  c: Record signal cookie dependencies                   ' \
                 '  r: Add extra resource information                      ' \
                 '  m: Add extra memory information                        ' \
@@ -94,6 +95,7 @@ def main():
         flag_map = {
                 's': scribe.SCRIBE_SYSCALL_RET,
                 'S': scribe.SCRIBE_SYSCALL_EXTRA,
+                'h': scribe.SCRIBE_SIG_EXTRA,
                 'c': scribe.SCRIBE_SIG_COOKIE,
                 'r': scribe.SCRIBE_RES_EXTRA,
                 'm': scribe.SCRIBE_MEM_EXTRA,

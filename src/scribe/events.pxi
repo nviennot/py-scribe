@@ -410,6 +410,24 @@ cdef class EventSigRecvCookie(Event):
         def __set__(self, value):
             (<scribe_api.scribe_event_sig_recv_cookie *>self.event_struct).cookie = value
 
+cdef class EventSigHandledCookie(Event):
+    type = Event.register(EventSigHandledCookie, scribe_api.SCRIBE_EVENT_SIG_HANDLED_COOKIE)
+
+    property cookie:
+        def __get__(self):
+            return (<scribe_api.scribe_event_sig_handled_cookie *>self.event_struct).cookie
+        def __set__(self, value):
+            (<scribe_api.scribe_event_sig_handled_cookie *>self.event_struct).cookie = value
+
+cdef class EventSigHandled(Event):
+    type = Event.register(EventSigHandled, scribe_api.SCRIBE_EVENT_SIG_HANDLED)
+
+    property nr:
+        def __get__(self):
+            return (<scribe_api.scribe_event_sig_handled *>self.event_struct).nr
+        def __set__(self, value):
+            (<scribe_api.scribe_event_sig_handled *>self.event_struct).nr = value
+
 cdef class EventDivergeEventType(EventDiverge):
     type = Event.register(EventDivergeEventType,
                           scribe_api.SCRIBE_EVENT_DIVERGE_EVENT_TYPE)
