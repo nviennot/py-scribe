@@ -18,24 +18,13 @@ cdef class PidInfo:
 
 cdef class EventsFromBuffer:
     cdef object buffer
-    cdef bint do_info
-    cdef bint remove_annotations
-
     cdef loff_t offset
-    cdef int pid
-    cdef dict pid_infos
-    cdef PidInfo current_pid_info
 
-    def __init__(self, buffer, do_info=True, remove_annotations=True):
+    def __init__(self, buffer):
         self.buffer = buffer
-        self.do_info = do_info
-        self.remove_annotations = remove_annotations
 
     def __iter__(self):
         self.offset = 0
-        self.pid = 0
-        self.pid_infos = {}
-        self.current_pid_info = PidInfo()
         return self
 
     cdef _next_raw(self):
@@ -46,10 +35,34 @@ cdef class EventsFromBuffer:
         self.offset += len(event)
         return event
 
+    def __next__(self):
+        return self._next_raw()
+
+cdef class Annotate:
+    cdef object events
+    cdef loff_t offset
+    cdef bint remove_annotations
+
+    cdef int pid
+    cdef dict pid_infos
+    cdef PidInfo current_pid_info
+
+    def __init__(self, events, remove_annotations=True):
+        self.events = iter(events)
+        self.remove_annotations = remove_annotations
+
+    def __iter__(self):
+        self.offset = 0
+        self.pid = 0
+        self.pid_infos = {}
+        self.current_pid_info = PidInfo()
+        return self
+
     cdef _next_info(self):
         while True:
             offset = self.offset
-            event = self._next_raw()
+            event = self.events.next()
+            self.offset += len(event)
             pid_info = self.current_pid_info
 
             if isinstance(event, EventPid):
@@ -88,9 +101,7 @@ cdef class EventsFromBuffer:
             return event_info, event
 
     def __next__(self):
-        if self.do_info:
-            return self._next_info()
-        return self._next_raw()
+        return self._next_info()
 
 
 cdef class Shrinker:
