@@ -49,6 +49,7 @@ cdef class Event:
         # underlying bytes, and not a bytearray.
         # Okey, we can but we need to break the COW mechanism (see __copy__())
         self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self._buffer)
+        assert self.event_struct.type == type
 
     def __len__(self):
         return len(self._buffer)
