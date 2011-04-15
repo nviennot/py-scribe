@@ -34,24 +34,22 @@ cdef class Event:
     cdef bytes event
     cdef scribe_api.scribe_event *event_struct
 
-    def __init__(self, bytes event=None, int extra_size=0):
+    def __init__(self, bytes event=None):
         cdef scribe_api.scribe_event h
         cdef int type = self.native_type
-        # We prefer to use the cdef version for performance reasons.
-        cdef size_t event_size = Event_size_from_type(type) + extra_size
         if event is None:
             h = {'type': type}
             header = cpython.PyBytes_FromStringAndSize(<char *>&h,
                                                        sizeof(scribe_api.scribe_event))
-            self.event = header + bytes(bytearray(event_size - len(header)))
+            self.event = header + bytes(bytearray(Event_size_from_type(type) - len(header)))
         else:
-            assert event_size == len(event)
+            assert Event_size_from_type(type) <= len(event)
             self.event = event
 
         # XXX We cannot modify the struct as we are using
         # underlying bytes, and not a bytearray.
+        # Okey, we can but we need to break the COW mechanism (see __copy__())
         self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self.event)
-        assert self.event_struct.type == type
 
     def __len__(self):
         return len(self.event)
@@ -62,11 +60,10 @@ cdef class Event:
                                     self.event_struct).decode()
 
     def __copy__(self):
-        cdef int extra_size = len(self.event) - Event_size_from_type(self.native_type)
         # Breaking COW the dirty way
         new_event = self.event + b'\x00'
         new_event = new_event[0:-1]
-        return self.__class__(new_event, extra_size);
+        return self.__class__(new_event)
 
     def clone(self):
         return self.__copy__()

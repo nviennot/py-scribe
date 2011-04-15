@@ -53,9 +53,9 @@ cdef class EventsFromBuffer:
         else:
             extra_size = 0
 
-        event = cls(self.buffer[self.offset:self.offset+size+extra_size],
-                    extra_size)
-        self.offset += size + extra_size
+        event_buf = self.buffer[self.offset:self.offset+size+extra_size]
+        event = cls(event_buf)
+        self.offset += len(event_buf)
         return event
 
     cdef _next_info(self):
