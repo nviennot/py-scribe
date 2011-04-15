@@ -33,7 +33,7 @@ cdef class Event:
     cdef bytes _buffer
     cdef scribe_api.scribe_event *event_struct
 
-    def __init__(self, bytes buffer=None):
+    def __init__(self, bytes buffer):
         cdef scribe_api.scribe_event h
         cdef int type = self.native_type
         if buffer is None:

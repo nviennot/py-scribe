@@ -20,7 +20,7 @@ def parse_events():
 #define SCRIBE_EVENT_DIVERGE(name, ...) \
     {'name': #name, 'type': 'EventDiverge', 'fields': [ __VA_ARGS__]},
 
-#define __field(type, name) { 'type': #type, 'name': #name },
+#define __field(type, name) { 'type': #type, 'native_name': #name },
 
 [
 #include <linux/scribe_events.h>
@@ -31,6 +31,8 @@ def parse_events():
     for event in events:
         if event['type'] == 'EventDiverge':
             event['name'] = 'diverge_' + event['name']
+        for field in event['fields']:
+            field['name'] = field['native_name'].split('[')[0]
     return events
 
 def camel_case(str):
@@ -73,15 +75,24 @@ def gen_event_classes(events):
         out.append('cdef class %s(%s):' % (class_name, event['type']))
         out.append('    native_type = Event.register(%s, %s)' % (class_name, scribe_type))
 
-        for field in event['fields']:
-            field_name = field['name']
-            if '[' in field_name:
-                field_name = field_name.split('[')[0]
+        fields = event['fields']
+        args = ', '.join(
+                ['self'] +
+                map(lambda f: "%s=None" % f['name'], fields) +
+                ['bytes buffer=None'])
+        out.append('    def __init__(%s):' % args)
+        out.append('        Event.__init__(self, buffer)')
+        for field in fields:
+            out.append('        if %s is not None:' % field['name'])
+            out.append('            self.%s = %s' % (field['name'], field['name']))
+
+        for field in fields:
+            if '[' in field['native_name']:
                 target = 'self.payload'
             else:
-                target = '(<%s *>self.event_struct).%s' % (scribe_struct, field_name)
+                target = '(<%s *>self.event_struct).%s' % (scribe_struct, field['name'])
 
-            out.append('    property %s:' % field_name)
+            out.append('    property %s:' % field['name'])
             out.append('        def __get__(self):')
             out.append('            return %s' % target)
             out.append('        def __set__(self, value):')
@@ -105,8 +116,8 @@ def gen_event_api(events):
         for field in event['fields']:
             field_type = field['type']
             field_type = string.replace(field_type, 'struct ', '')
-            field_name = field['name']
-            out.append('        %s %s' % (field_type, field_name))
+            field_native_name = field['native_name']
+            out.append('        %s %s' % (field_type, field_native_name))
     return out
 
 events = parse_events()
