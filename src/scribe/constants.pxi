@@ -2,6 +2,7 @@ cimport scribe_api
 
 SCRIBE_SYSCALL_RET            = scribe_api.SCRIBE_SYSCALL_RET
 SCRIBE_SYSCALL_EXTRA          = scribe_api.SCRIBE_SYSCALL_EXTRA
+SCRIBE_SIG_EXTRA              = scribe_api.SCRIBE_SIG_EXTRA
 SCRIBE_SIG_COOKIE             = scribe_api.SCRIBE_SIG_COOKIE
 SCRIBE_RES_EXTRA              = scribe_api.SCRIBE_RES_EXTRA
 SCRIBE_MEM_EXTRA              = scribe_api.SCRIBE_MEM_EXTRA
