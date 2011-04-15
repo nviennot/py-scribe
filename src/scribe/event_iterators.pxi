@@ -42,20 +42,8 @@ cdef class EventsFromBuffer:
         if self.offset >= len(self.buffer):
             raise StopIteration
 
-        type = ord(self.buffer[self.offset:self.offset+1])
-        cls, size, is_sized_event = Event_get_type_info(type)
-
-        if is_sized_event:
-            event_sized = self.buffer[self.offset:
-                                      sizeof(scribe_api.scribe_event_sized)+self.offset]
-            extra_size = (<scribe_api.scribe_event_sized *>
-                                    cpython.PyBytes_AsString(event_sized)).size
-        else:
-            extra_size = 0
-
-        event_buf = self.buffer[self.offset:self.offset+size+extra_size]
-        event = cls(buffer=event_buf)
-        self.offset += len(event_buf)
+        event = Event.from_bytes(self.buffer, self.offset)
+        self.offset += len(event)
         return event
 
     cdef _next_info(self):

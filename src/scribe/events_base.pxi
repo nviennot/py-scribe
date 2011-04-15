@@ -6,11 +6,7 @@ cimport scribe_api_events
 cimport cpython
 import os
 
-def Event_from_bytes(bytes buffer):
-    cls, _, _ = Event_get_type_info(ord(buffer[0:1]))
-    return cls(buffer)
-
-def Event_get_type_info(type):
+cpdef inline Event_get_type_info(type):
     return Event.class_of[type], \
             scribe_api.sizeof_event_from_type(type), \
             scribe_api.is_sized_type(type)
@@ -21,6 +17,20 @@ def Event_register(event_class, type):
 
 cpdef inline size_t Event_size_from_type(int type) except -1:
     return scribe_api.sizeof_event_from_type(type)
+
+def Event_from_bytes(buffer, offset=0):
+    type = ord(buffer[offset:offset+1])
+    cls, size, is_sized_event = Event_get_type_info(type)
+
+    extra_size = 0
+    if is_sized_event:
+        event_sized = buffer[offset:sizeof(scribe_api.scribe_event_sized)+offset]
+        extra_size = (<scribe_api.scribe_event_sized *>
+                                cpython.PyBytes_AsString(event_sized)).size
+
+    event_buf = buffer[offset:offset+size+extra_size]
+    return cls(buffer=event_buf)
+
 
 cdef class Event:
     class_of = dict()
