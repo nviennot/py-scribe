@@ -16,5 +16,20 @@ cdef extern from "linux/types.h":
 
 cdef extern from "asm/ptrace.h":
     struct pt_regs:
-        pass
-
+        long ebx
+        long ecx
+        long edx
+        long esi
+        long edi
+        long ebp
+        long eax
+        int  xds
+        int  xes
+        int  xfs
+        int  xgs
+        long orig_eax
+        long eip
+        int  xcs
+        long eflags
+        long esp
+        int  xss
