@@ -87,6 +87,14 @@ def gen_event_classes(events):
             out.append('        if %s is not None:' % field['name'])
             out.append('            self.%s = %s' % (field['name'], field['name']))
 
+        out.append('    def __repr__(self):')
+        if fields:
+            args   = ', '.join(map(lambda f: "%s=%%s" % f['name'], fields))
+            values = ', '.join(map(lambda f: "repr(self.%s)" % f['name'], fields))
+            out.append('        return "%s(%s)" %% (%s)' % (class_name, args, values))
+        else:
+            out.append('        return "%s()"' % class_name)
+
         for field in fields:
             if '[' in field['native_name']:
                 target = 'self.payload'
