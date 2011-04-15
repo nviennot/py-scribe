@@ -81,6 +81,24 @@ cdef class Event:
     def encode(self):
         return self._buffer
 
+    def __richcmp__(_x, _y, int op):
+        if op != 2 and op != 3:
+            raise NotImplementedError()
+
+        if not isinstance(_y, Event):
+            return False
+
+        cdef Event x = _x
+        cdef Event y = _y
+
+        if op == 2: # ==
+            return x._buffer == y._buffer
+        elif op == 3: # !=
+            return x._buffer != y._buffer
+
+    def __hash__(self):
+        return hash(self._buffer)
+
 cdef class EventSized(Event):
     property payload:
         def __get__(self):
