@@ -1,3 +1,4 @@
 src/scribe/scribe.c
 src/scribe/scribe_api_events.pxd
 src/scribe/events.pxi
+build/
