@@ -30,29 +30,28 @@ cdef class Event:
     size_from_type = staticmethod(Event_size_from_type)
     from_bytes = staticmethod(Event_from_bytes)
 
-    # We need to keep the event reference because event_struct won't
-    cdef bytes event
+    cdef bytes _buffer
     cdef scribe_api.scribe_event *event_struct
 
-    def __init__(self, bytes event=None):
+    def __init__(self, bytes buffer=None):
         cdef scribe_api.scribe_event h
         cdef int type = self.native_type
-        if event is None:
+        if buffer is None:
             h = {'type': type}
             header = cpython.PyBytes_FromStringAndSize(<char *>&h,
                                                        sizeof(scribe_api.scribe_event))
-            self.event = header + bytes(bytearray(Event_size_from_type(type) - len(header)))
+            self._buffer = header + bytes(bytearray(Event_size_from_type(type) - len(header)))
         else:
-            assert Event_size_from_type(type) <= len(event)
-            self.event = event
+            assert Event_size_from_type(type) <= len(buffer)
+            self._buffer = buffer
 
         # XXX We cannot modify the struct as we are using
         # underlying bytes, and not a bytearray.
         # Okey, we can but we need to break the COW mechanism (see __copy__())
-        self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self.event)
+        self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self._buffer)
 
     def __len__(self):
-        return len(self.event)
+        return len(self._buffer)
 
     def __str__(self):
         cdef char buffer[4096]
@@ -61,15 +60,15 @@ cdef class Event:
 
     def __copy__(self):
         # Breaking COW the dirty way
-        new_event = self.event + b'\x00'
+        new_event = self._buffer + b'\x00'
         new_event = new_event[0:-1]
         return self.__class__(new_event)
 
-    def clone(self):
+    def copy(self):
         return self.__copy__()
 
     def encode(self):
-        return self.event
+        return self._buffer
 
 cdef class EventSized(Event):
     property payload:
@@ -80,8 +79,8 @@ cdef class EventSized(Event):
         def __set__(self, value):
             payload = bytes(value)
             assert(len(payload) <= 0xFFFF)
-            self.event = self.event[0:Event_size_from_type(self.native_type)] + payload
-            self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self.event)
+            self._buffer = self._buffer[0:Event_size_from_type(self.native_type)] + payload
+            self.event_struct = <scribe_api.scribe_event *>cpython.PyBytes_AsString(self._buffer)
             (<scribe_api.scribe_event_sized *>self.event_struct).size = len(payload)
 
 cdef class EventDiverge(Event):
