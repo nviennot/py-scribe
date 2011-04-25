@@ -133,7 +133,7 @@ class DivergeError(Exception):
             strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
-        it = EventsFromBuffer(logfile_map, remove_annotations=False)
+        it = Annotate(EventsFromBuffer(logfile_map), remove_annotations=False)
         try:
             events = self._get_events(it)
         except:
