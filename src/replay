@@ -58,22 +58,25 @@ def main():
 
     logfile = open(args[0], 'r')
 
-    ps = scribe.Popen(logfile, replay = True, show_dmesg = options.dmesg,
-                      backtrace_len = options.backtrace_len,
-                      backtrace_all_pids = options.backtrace_all_pids,
-                      backtrace_num_last_events = options.backtrace_num_last_events,
-                      golive_bookmark_id = options.golive_bookmark_id)
-
     stop_requested = [False]
+    class ReplayContext(scribe.Context):
+        def on_bookmark(self, id, npr):
+            if id == options.golive_bookmark_id or stop_requested[0]:
+                self.stop()
+            else:
+                self.resume()
+
+    context = ReplayContext(logfile, show_dmesg = options.dmesg,
+                            backtrace_len = options.backtrace_len,
+                            backtrace_all_pids = options.backtrace_all_pids,
+                            backtrace_num_last_events = options.backtrace_num_last_events)
+    ps = scribe.Popen(context, replay = True)
+
     def do_stop(signum, stack):
-        try:
-            ps.stop()
-            stop_requested[0] = True
-        except OSError as e:
-            logging.error("Cannot request to stop (%s)" % str(e))
+        stop_requested[0] = True
     def do_check_deadlock(signum, stack):
         try:
-            ps.check_deadlock()
+            context.check_deadlock()
         except OSError as e:
             if e.errno != errno.EPERM:
                 logging.error("Cannot check for deadlock (%s)" % str(e))
@@ -86,7 +89,7 @@ def main():
                          options.check_deadlock, options.check_deadlock)
 
     try:
-        ps.scribe_wait()
+        context.wait()
     except scribe.DivergeError as derr:
         logging.debug(str(derr))
         exit(derr.err)

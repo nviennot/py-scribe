@@ -28,10 +28,11 @@ def main():
 
     logfile = open(args[0], 'r')
     logfile_map = mmap.mmap(logfile.fileno(), 0, prot=mmap.PROT_READ)
+    events = scribe.EventsFromBuffer(logfile_map)
 
     if options.annotated:
         pids = options.pids
-        for info, event in scribe.EventsFromBuffer(logfile_map):
+        for info, event in scribe.Annotate(events):
             if pids and not info.pid in options.pids:
                 continue
             print("[%02d] %s%s%s" % (info.pid,
@@ -39,7 +40,7 @@ def main():
                                    "  " * info.res_depth,
                                    event))
     else:
-        for event in scribe.EventsFromBuffer(logfile_map, do_info=False):
+        for event in events:
             print(event)
 
 if __name__ == '__main__':

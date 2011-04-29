@@ -25,6 +25,9 @@ cdef void on_diverge(void *private_data, scribe_api.scribe_event_diverge *event)
                  scribe_api.sizeof_event(<scribe_api.scribe_event *>event))
     (<Context>private_data).on_diverge(Event_from_bytes(buffer))
 
+cdef void on_bookmark(void *private_data, int id, int npr) with gil:
+    (<Context>private_data).on_bookmark(id, npr)
+
 
 cdef char **list_to_pstr(strings):
     cdef char **array
@@ -68,18 +71,12 @@ cdef void init_loader(void *private_data,
     (<Context>private_data).init_loader(pstr_to_list(argv), pstr_to_dict(envp))
 
 
-cdef scribe_api.scribe_operations scribe_ops = {
-    'init_loader': NULL,
-    'on_backtrace': on_backtrace,
-    'on_diverge': on_diverge
-}
-
-cdef scribe_api.scribe_operations scribe_ops_with_init_loader = {
+cdef scribe_api.scribe_operations scribe_ops= {
     'init_loader': init_loader,
     'on_backtrace': on_backtrace,
-    'on_diverge': on_diverge
+    'on_diverge': on_diverge,
+    'on_bookmark': on_bookmark
 }
-
 
 
 class DivergeError(Exception):
@@ -136,7 +133,7 @@ class DivergeError(Exception):
             strs.append("  I can't mmap the logfile, you're not getting a backtrace :(")
             return strs
 
-        it = EventsFromBuffer(logfile_map, remove_annotations=False)
+        it = Annotate(EventsFromBuffer(logfile_map), remove_annotations=False)
         try:
             events = self._get_events(it)
         except:
@@ -204,21 +201,29 @@ cdef class Context:
     cdef object log_offsets
     cdef object diverge_event
     cdef bint show_dmesg
+    cdef int backtrace_len
+    cdef bint backtrace_all_pids
+    cdef int backtrace_num_last_events
+    cdef object custom_init_loader
 
-    def __init__(self, logfile, has_init_loader=False, show_dmesg=False):
-        cdef scribe_api.scribe_operations *ops
-        if has_init_loader:
-            ops = &scribe_ops_with_init_loader
-        else:
-            ops = &scribe_ops
+    def __init__(self, logfile, show_dmesg=False,
+                 backtrace_len=100, backtrace_all_pids=False,
+                 backtrace_num_last_events=0):
 
-        err = scribe_api.scribe_context_create(&self._ctx, ops, <void *>self)
+        err = scribe_api.scribe_context_create(&self._ctx,
+                                               &scribe_ops, <void *>self)
         if err:
             self._ctx = NULL
             raise OSError(errno, os.strerror(errno))
 
         self.logfile = logfile
         self.show_dmesg = show_dmesg
+
+        self.backtrace_len = backtrace_len
+        self.backtrace_all_pids = backtrace_all_pids
+        self.backtrace_num_last_events = backtrace_num_last_events
+
+        self.custom_init_loader = None
 
     def __del__(self):
         if self._ctx:
@@ -258,18 +263,13 @@ cdef class Context:
             free(_args)
             free(_env)
 
-    def replay(self, backtrace_len=100, backtrace_all_pids=False,
-               backtrace_num_last_events=0, golive_bookmark_id=None):
+    def replay(self):
         self.log_offsets = None
         self.diverge_event = None
-        self.backtrace_all_pids = backtrace_all_pids
-        self.backtrace_num_last_events = backtrace_num_last_events
         if self.show_dmesg:
             os.system('dmesg -c > /dev/null')
-        if golive_bookmark_id is None:
-            golive_bookmark_id = -1
         pid = scribe_api.scribe_replay(self._ctx, 0, self.logfile.fileno(),
-                            backtrace_len, golive_bookmark_id)
+                                       self.backtrace_len)
         if pid < 0:
             raise OSError(errno, os.strerror(errno))
         return pid
@@ -303,6 +303,11 @@ cdef class Context:
         if err:
             raise OSError(errno, os.strerror(errno))
 
+    def resume(self):
+        err = scribe_api.scribe_resume(self._ctx)
+        if err:
+            raise OSError(errno, os.strerror(errno))
+
     def bookmark(self):
         err = scribe_api.scribe_bookmark(self._ctx)
         if err:
@@ -314,7 +319,15 @@ cdef class Context:
             raise OSError(errno, os.strerror(errno))
 
     def init_loader(self, argv, envp):
-        pass
+        if self.custom_init_loader:
+            self.custom_init_loader(argv, envp)
+            return
+
+        bargv = list(arg.encode() for arg in argv)
+        _argv = list_to_pstr(bargv)
+        benvp = list(env.encode() for env in envp)
+        _envp = list_to_pstr(benvp)
+        scribe_api.scribe_default_init_loader(_argv, _envp)
 
     def on_backtrace(self, log_offsets):
         self.log_offsets = log_offsets
@@ -322,17 +335,17 @@ cdef class Context:
     def on_diverge(self, event):
         self.diverge_event = event
 
+    def on_bookmark(self, id, npr):
+        self.resume()
 
 
-class Popen(subprocess.Popen, Context):
-    def __init__(self, logfile, args=None, bufsize=0, executable=None,
+
+class Popen(subprocess.Popen):
+    def __init__(self, Context context, args=None, bufsize=0, executable=None,
                  stdin=None, stdout=None, stderr=None,
                  preexec_fn=None, close_fds=True, shell=False,
                  cwd=None, chroot=None, env=None, universal_newlines=False,
                  record=False, replay=False,
-                 backtrace_len=100, backtrace_all_pids=False,
-                 backtrace_num_last_events=0,
-                 show_dmesg=False, golive_bookmark_id=None,
                  flags=scribe_api.SCRIBE_DEFAULT,
                  startupinfo=None, creationflags=0):
         """ XXX close_fds=True by default
@@ -348,33 +361,19 @@ class Popen(subprocess.Popen, Context):
                 raise ValueError('During replay args, env, cwd, chroot '
                                  'cannot be specified')
 
+        self.context = context
         self.do_record = record
-        self.backtrace_len = backtrace_len
-        self.backtrace_all_pids = backtrace_all_pids
-        self.backtrace_num_last_events = backtrace_num_last_events
-        self.golive_bookmark_id = golive_bookmark_id
         self.flags = flags
         self.chroot = chroot
 
-        Context.__init__(self, logfile, has_init_loader = True,
-                         show_dmesg=show_dmesg)
+        context.custom_init_loader = lambda argv, envp: self.init_loader(argv, envp)
+
         subprocess.Popen.__init__(self, args,
                 bufsize=bufsize, executable=executable,
                  stdin=stdin, stdout=stdout, stderr=stderr,
                  preexec_fn=preexec_fn, close_fds=close_fds, shell=shell,
                  cwd=cwd, env=env, universal_newlines=universal_newlines,
                  startupinfo=startupinfo, creationflags=creationflags)
-
-
-    def __del__(self):
-        Context.__del__(self)
-        subprocess.Popen.__del__(self)
-
-    def scribe_wait(self):
-        Context.wait(self)
-
-    def wait(self):
-        return subprocess.Popen.wait(self)
 
     def init_loader(self, args, env):
         (preexec_fn, close_fds, cwd, p2cread, p2cwrite,
@@ -481,13 +480,10 @@ class Popen(subprocess.Popen, Context):
                 gc.disable()
                 try:
                     if self.do_record:
-                        self.pid = self.record(args, env, cwd,
-                                               self.chroot, self.flags)
+                        self.pid = self.context.record(args, env, cwd,
+                                                       self.chroot, self.flags)
                     else:
-                        self.pid = self.replay(self.backtrace_len,
-                                               self.backtrace_all_pids,
-                                               self.backtrace_num_last_events,
-                                               self.golive_bookmark_id)
+                        self.pid = self.context.replay()
                 except:
                     if gc_was_enabled:
                         gc.enable()

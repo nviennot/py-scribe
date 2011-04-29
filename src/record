@@ -39,6 +39,7 @@ def main():
                 'The argument is a string of the following characters:    ' \
                 '  s: Always include the syscall return value.            ' \
                 '  S: Add extra syscall information                       ' \
+                '  h: Record signal handler extra information             ' \
                 '  c: Record signal cookie dependencies                   ' \
                 '  r: Add extra resource information                      ' \
                 '  m: Add extra memory information                        ' \
@@ -94,6 +95,7 @@ def main():
         flag_map = {
                 's': scribe.SCRIBE_SYSCALL_RET,
                 'S': scribe.SCRIBE_SYSCALL_EXTRA,
+                'h': scribe.SCRIBE_SIG_EXTRA,
                 'c': scribe.SCRIBE_SIG_COOKIE,
                 'r': scribe.SCRIBE_RES_EXTRA,
                 'm': scribe.SCRIBE_MEM_EXTRA,
@@ -117,20 +119,21 @@ def main():
         flags |= scribe.SCRIBE_CUSTOM_INIT
     if options.new_net:
         flags |= scribe.SCRIBE_CLONE_NEWNET
-    ps = scribe.Popen(logfile, cmd, record = True, shell = options.shell,
+    context = scribe.Context(logfile)
+    ps = scribe.Popen(context, cmd, record = True, shell = options.shell,
                       cwd = options.cwd, chroot = options.chroot,
                       flags = flags)
 
     stop_requested = [False]
     def do_stop(signum, stack):
         try:
-            ps.stop()
+            context.stop()
             stop_requested[0] = True
         except OSError as e:
             logging.error("Cannot request to stop (%s)" % str(e))
     def do_bookmark(signum, stack):
         try:
-            ps.bookmark()
+            context.bookmark()
         except OSError as e:
             if e.errno != errno.EPERM:
                 logging.error("Cannot request bookmark (%s)" % str(e))
@@ -151,7 +154,7 @@ def main():
         signal.setitimer(signal.ITIMER_REAL,
                          options.auto_bookmark, options.auto_bookmark)
 
-    ps.scribe_wait()
+    context.wait()
 
     if options.auto_bookmark:
         signal.setitimer(signal.ITIMER_REAL, 0)

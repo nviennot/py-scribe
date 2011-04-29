@@ -1,4 +1,5 @@
 include 'context.pxi'
+include 'events_base.pxi'
 include 'events.pxi'
 include 'event_iterators.pxi'
 include 'constants.pxi'
