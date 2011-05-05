@@ -40,6 +40,9 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_DATA_NEED_INFO
     enum: SCRIBE_DATA_ZERO
 
+    enum: SCRIBE_BOOKMARK_PRE_SYSCALL
+    enum: SCRIBE_BOOKMARK_POST_SYSCALL
+
     enum: SCRIBE_RES_TYPE_INODE
     enum: SCRIBE_RES_TYPE_FILE
     enum: SCRIBE_RES_TYPE_FILES_STRUCT
