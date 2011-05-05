@@ -204,7 +204,7 @@ cdef class Context:
     cdef int backtrace_len
     cdef bint backtrace_all_pids
     cdef int backtrace_num_last_events
-    cdef object custom_init_loader
+    cdef object custom_init_loaders
 
     def __init__(self, logfile, show_dmesg=False,
                  backtrace_len=100, backtrace_all_pids=False,
@@ -223,7 +223,7 @@ cdef class Context:
         self.backtrace_all_pids = backtrace_all_pids
         self.backtrace_num_last_events = backtrace_num_last_events
 
-        self.custom_init_loader = None
+        self.custom_init_loaders = list()
 
     def __del__(self):
         if self._ctx:
@@ -318,9 +318,13 @@ cdef class Context:
         if err:
             raise OSError(errno, os.strerror(errno))
 
+    def add_init_loader(self, func):
+        self.custom_init_loaders.append(func)
+
     def init_loader(self, argv, envp):
-        if self.custom_init_loader:
-            self.custom_init_loader(argv, envp)
+        for func in self.custom_init_loaders:
+            func(argv, envp)
+        if len(self.custom_init_loaders):
             return
 
         bargv = list(arg.encode() for arg in argv)
@@ -366,7 +370,7 @@ class Popen(subprocess.Popen):
         self.flags = flags
         self.chroot = chroot
 
-        context.custom_init_loader = lambda argv, envp: self.init_loader(argv, envp)
+        context.add_init_loader(lambda argv, envp: self.init_loader(argv, envp))
 
         subprocess.Popen.__init__(self, args,
                 bufsize=bufsize, executable=executable,

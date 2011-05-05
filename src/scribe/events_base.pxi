@@ -73,7 +73,7 @@ cdef class Event:
         # Breaking COW the dirty way
         new_event = self._buffer + b'\x00'
         new_event = new_event[0:-1]
-        return self.__class__(new_event)
+        return self.__class__(buffer=new_event)
 
     def copy(self):
         return self.__copy__()
