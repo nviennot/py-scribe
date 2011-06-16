@@ -115,6 +115,7 @@ cdef extern from "scribe.h" nogil:
         void (*on_backtrace) (void *private_data, loff_t *log_offset, int num)
         void (*on_diverge) (void *private_data, scribe_event_diverge *event)
         void (*on_bookmark) (void *private_data, int id, int npr)
+        void (*on_attach) (void *private_data, pid_t real_pid, pid_t scribe_pid)
 
     void scribe_default_init_loader(char_p_const *argv, char_p_const *envp)
 
