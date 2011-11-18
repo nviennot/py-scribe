@@ -56,15 +56,73 @@ def main():
 
     configure_logging((logging.DEBUG, logging.INFO)[options.quiet])
 
-    logfile = open(args[0], 'r')
+    logfile = open(args[0], 'r+')
 
     stop_requested = [False]
     class ReplayContext(scribe.Context):
+        def __init__(self, logfile, **kargs):
+            scribe.Context.__init__(self, logfile, **kargs)
+            self.logfile = logfile
+            self.mutations = []
+
         def on_bookmark(self, id, npr):
             if id == options.golive_bookmark_id or stop_requested[0]:
                 self.stop()
             else:
                 self.resume()
+
+        def on_mutation(self, event):
+            self.mutations.append(event)
+
+        def has_mutations(self):
+            return not not self.mutations
+
+        def print_mutation_stats(self):
+            print("")
+            print("="*70)
+            print("Syscalls mutation map:")
+
+            syscalls = []
+            logfile_map = mmap.mmap(self.logfile.fileno(), 0)
+            offset = 0
+            for event in scribe.EventsFromBuffer(logfile_map):
+                if isinstance(event, scribe.EventSyscall) or \
+                        isinstance(event, scribe.EventSyscallExtra):
+                    syscalls.append((offset, False))
+                offset += len(event)
+            syscalls.extend((event.last_event_offset, True)
+                            for event in self.mutations)
+            syscalls.sort(key=lambda x: x[0])
+
+            chars = min(len(syscalls), 100000)
+            per_char = len(syscalls)/float(chars)
+            str = ""
+            for i in range(chars):
+                start = int(i*per_char)
+                end = int((i+1)*per_char)
+                got_mutation = False
+                for (_, mutation) in syscalls[start:end]:
+                    if mutation:
+                        got_mutation = True
+                        break
+
+                str += (".","+")[got_mutation]
+
+            print(str)
+            print("Mutations (+%d) interleaved in %d syscalls:" %
+                    (len(self.mutations), len(syscalls)))
+
+            mutation_count = dict()
+            for event in self.mutations:
+                t = event.__class__
+                if t == scribe.EventDivergeSyscall:
+                    t = event.nr
+                if t in mutation_count:
+                    mutation_count[t][1] += 1
+                else:
+                    mutation_count[t] = [event, 1]
+            for _, (event, count) in mutation_count.items():
+                print("  %s:\t%d" % (event, count))
 
     context = ReplayContext(logfile, show_dmesg = options.dmesg,
                             backtrace_len = options.backtrace_len,
@@ -97,6 +155,9 @@ def main():
     if stop_requested[0] or options.golive_bookmark_id:
         logging.info("Replay stopped")
     ps.wait()
+
+    if context.has_mutations():
+        context.print_mutation_stats()
 
 if __name__ == '__main__':
     main()

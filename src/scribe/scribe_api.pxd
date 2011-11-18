@@ -97,6 +97,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     struct scribe_event_diverge:
         scribe_event h
         __u32 pid
+        __u32 fatal
         __u64 last_event_offset
 
     bint is_sized_type(int type)

@@ -341,12 +341,18 @@ cdef class Context:
         self.log_offsets = log_offsets
 
     def on_diverge(self, event):
-        self.diverge_event = event
+        if event.fatal:
+            self.diverge_event = event
+        else:
+            self.on_mutation(event)
 
     def on_bookmark(self, id, npr):
         self.resume()
 
     def on_attach(self, real_pid, scribe_pid):
+        pass
+
+    def on_mutation(self, event):
         pass
 
 
