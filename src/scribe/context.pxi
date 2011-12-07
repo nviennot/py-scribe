@@ -289,7 +289,8 @@ cdef class Context:
             if err == -2 and _errno == EINTR:
                 cpython.PyErr_CheckSignals()
                 continue
-            if _errno == scribe_api.EDIVERGE or self.log_offsets:
+            if _errno == scribe_api.EDIVERGE or \
+               _errno == EDEADLK or self.log_offsets:
                 dmesg = None
                 if self.show_dmesg:
                     ps = subprocess.Popen('dmesg', stdout=subprocess.PIPE)
