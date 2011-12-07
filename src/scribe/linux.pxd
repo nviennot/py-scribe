@@ -1,5 +1,6 @@
 cdef extern from "errno.h":
     enum: EINTR
+    enum: EDEADLK
 
 cdef extern from "linux/types.h":
     ctypedef long long loff_t

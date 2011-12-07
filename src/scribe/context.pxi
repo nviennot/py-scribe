@@ -198,6 +198,8 @@ class DivergeError(Exception):
         return '\n'.join(strs)
 
 
+class DeadlockError(DivergeError):
+    pass
 
 cdef class Context:
     cdef scribe_api.scribe_context_t _ctx
@@ -293,13 +295,20 @@ cdef class Context:
                     ps = subprocess.Popen('dmesg', stdout=subprocess.PIPE)
                     (dmesg, _) = ps.communicate()
                     dmesg = dmesg.decode()
-                raise DivergeError(err = _errno,
-                                   event = self.diverge_event,
-                                   logfile = self.logfile,
-                                   backtrace_offsets = self.log_offsets,
-                                   backtrace_all_pids = self.backtrace_all_pids,
-                                   backtrace_num_last_events = self.backtrace_num_last_events,
-                                   additional_trace = dmesg)
+                args = {'err': _errno,
+                        'event': self.diverge_event,
+                        'logfile': self.logfile,
+                        'backtrace_offsets': self.log_offsets,
+                        'backtrace_all_pids': self.backtrace_all_pids,
+                        'backtrace_num_last_events': self.backtrace_num_last_events,
+                        'additional_trace': dmesg
+                        }
+
+                if _errno == EDEADLK:
+                    raise DeadlockError(**args)
+                else:
+                    raise DivergeError(**args)
+
             raise OSError(_errno, os.strerror(_errno))
 
     def stop(self):

@@ -125,6 +125,12 @@ cdef class EventDiverge(Event):
         def __set__(self, value):
             (<scribe_api.scribe_event_diverge *>self.event_struct).last_event_offset = value
 
+    property num_ev_consumed:
+        def __get__(self):
+            return (<scribe_api.scribe_event_diverge *> self.event_struct).num_ev_consumed
+        def __set__(self, value):
+            (<scribe_api.scribe_event_diverge *>self.event_struct).num_ev_consumed = value
+
     property fatal:
         def __get__(self):
             return (<scribe_api.scribe_event_diverge *> self.event_struct).fatal

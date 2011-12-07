@@ -31,6 +31,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_PS_ENABLE_TSC
     enum: SCRIBE_PS_ENABLE_MM
     enum: SCRIBE_PS_ENABLE_RET_CHECK
+    enum: SCRIBE_PS_ENABLE_STRICT_RPY
     enum: SCRIBE_PS_ENABLE_ALL
 
     enum: SCRIBE_DATA_INPUT
@@ -42,6 +43,9 @@ cdef extern from "linux/scribe_api.h" nogil:
 
     enum: SCRIBE_BOOKMARK_PRE_SYSCALL
     enum: SCRIBE_BOOKMARK_POST_SYSCALL
+
+    enum: SCRIBE_PERMANANT
+    enum: SCRIBE_UNTIL_NEXT_SYSCALL
 
     enum: SCRIBE_RES_TYPE_INODE
     enum: SCRIBE_RES_TYPE_FILE
@@ -98,6 +102,7 @@ cdef extern from "linux/scribe_api.h" nogil:
         scribe_event h
         __u32 pid
         __u32 fatal
+        __u32 num_ev_consumed
         __u64 last_event_offset
 
     bint is_sized_type(int type)
