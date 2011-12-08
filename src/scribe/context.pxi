@@ -16,17 +16,25 @@ from collections import deque
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
     log_offsets = list(log_offset[i] for i in range(num))
-    (<Context>private_data).on_backtrace(log_offsets)
-
+    try:
+        (<Context>private_data).on_backtrace(log_offsets)
+    except:
+        traceback.print_exc()
 
 cdef void on_diverge(void *private_data, scribe_api.scribe_event_diverge *event) with gil:
     buffer = cpython.PyBytes_FromStringAndSize(
                  <char *>event,
                  scribe_api.sizeof_event(<scribe_api.scribe_event *>event))
-    (<Context>private_data).on_diverge(Event_from_bytes(buffer))
+    try:
+        (<Context>private_data).on_diverge(Event_from_bytes(buffer))
+    except:
+        traceback.print_exc()
 
 cdef void on_bookmark(void *private_data, int id, int npr) with gil:
-    (<Context>private_data).on_bookmark(id, npr)
+    try:
+        (<Context>private_data).on_bookmark(id, npr)
+    except:
+        traceback.print_exc()
 
 cdef void on_attach(void *private_data, pid_t real_pid, pid_t scribe_pid) with gil:
     (<Context>private_data).on_attach(real_pid, scribe_pid)
