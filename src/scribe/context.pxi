@@ -209,6 +209,9 @@ class DivergeError(Exception):
 class DeadlockError(DivergeError):
     pass
 
+class ContextClosedError(Exception):
+    pass
+
 cdef class Context:
     cdef scribe_api.scribe_context_t _ctx
     cdef object logfile
@@ -244,6 +247,13 @@ cdef class Context:
             scribe_api.scribe_context_destroy(self._ctx)
             self._ctx = NULL
 
+    def closed(self):
+        return self._ctx == NULL
+
+    def _assert_ctx(self):
+        if self.closed():
+            raise ContextClosedError()
+
     def __del__(self):
         self.close()
 
@@ -253,6 +263,8 @@ cdef class Context:
         cdef char **_env = NULL
         cdef char *_cwd = NULL
         cdef char *_chroot = NULL
+
+        self._assert_ctx()
 
         bargs = list(arg.encode() for arg in args)
         if env is not None:
@@ -281,6 +293,8 @@ cdef class Context:
             free(_env)
 
     def replay(self):
+        self._assert_ctx()
+
         self.log_offsets = None
         self.diverge_event = None
         if self.show_dmesg:
@@ -293,12 +307,15 @@ cdef class Context:
 
     def wait(self):
         while True:
+            self._assert_ctx()
             err = scribe_api.scribe_wait(self._ctx)
             if err == 0:
                 break
             _errno = errno
             if err == -2 and _errno == EINTR:
                 cpython.PyErr_CheckSignals()
+                continue
+            if err == -2 and _errno == EBADF:
                 continue
             if _errno == scribe_api.EDIVERGE or \
                _errno == EDEADLK or self.log_offsets:
@@ -324,21 +341,25 @@ cdef class Context:
             raise OSError(_errno, os.strerror(_errno))
 
     def stop(self):
+        self._assert_ctx()
         err = scribe_api.scribe_stop(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
 
     def resume(self):
+        self._assert_ctx()
         err = scribe_api.scribe_resume(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
 
     def bookmark(self):
+        self._assert_ctx()
         err = scribe_api.scribe_bookmark(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
 
     def check_deadlock(self):
+        self._assert_ctx()
         err = scribe_api.scribe_check_deadlock(self._ctx)
         if err:
             raise OSError(errno, os.strerror(errno))
