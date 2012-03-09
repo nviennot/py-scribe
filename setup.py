@@ -39,7 +39,12 @@ def parse_events():
 def camel_case(str):
     return ''.join(map(lambda e: e[0].upper() + e[1:], str.split('_')))
 
-def field_setter(type, target):
+def field_getter(type, target, array_size):
+    if array_size > 0:
+        target = 'cpython.PyBytes_FromStringAndSize(<char *>(&%s[0]), sizeof(%s))' % (target, target)
+    return ['            return %s' % target]
+
+def field_setter(type, target, array_size):
     out = []
     value = 'value'
     if type == 'struct pt_regs':
@@ -62,6 +67,11 @@ def field_setter(type, target):
         out.append('            regs.esp = value["esp"]')
         out.append('            regs.xss = value["xss"]')
         value = 'regs'
+
+    if array_size > 0:
+        out.append('            raise NotImplementedError()')
+        return out
+
     out.append('            %s = %s' % (target, value))
     return out
 
@@ -96,16 +106,20 @@ def gen_event_classes(events):
             out.append('        return "%s()"' % class_name)
 
         for field in fields:
-            if '[' in field['native_name']:
+            target = '(<%s *>self.event_struct).%s' % (scribe_struct, field['name'])
+            array_size = None
+
+            if '[0]' in field['native_name']:
+                array_size = 0
                 target = 'self.payload'
-            else:
-                target = '(<%s *>self.event_struct).%s' % (scribe_struct, field['name'])
+            elif '[' in field['native_name']:
+                array_size = 'sizeof(<%s *>self.event_struct).%s)' % (scribe_struct, field['name'])
 
             out.append('    property %s:' % field['name'])
             out.append('        def __get__(self):')
-            out.append('            return %s' % target)
+            out.extend(field_getter(field['type'], target, array_size))
             out.append('        def __set__(self, value):')
-            out.extend(field_setter(field['type'], target))
+            out.extend(field_setter(field['type'], target, array_size))
         out.append('')
     return out
 
