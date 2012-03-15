@@ -32,6 +32,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_PS_ENABLE_MM
     enum: SCRIBE_PS_RET_CHECK
     enum: SCRIBE_PS_STRICT_REPLAY
+    enum: SCRIBE_PS_FIXED_IO
     enum: SCRIBE_PS_ENABLE_ALL
 
     enum: SCRIBE_DATA_INPUT
