@@ -16,6 +16,7 @@ SCRIBE_ALL                    = scribe_api.SCRIBE_ALL
 SCRIBE_DEFAULT                = scribe_api.SCRIBE_DEFAULT
 
 SCRIBE_DISABLE_MM             = scribe_api.SCRIBE_DISABLE_MM
+SCRIBE_DISABLE_FUTEX_HASH     = scribe_api.SCRIBE_DISABLE_FUTEX_HASH
 
 SCRIBE_PS_RECORD              = scribe_api.SCRIBE_PS_RECORD
 SCRIBE_PS_REPLAY              = scribe_api.SCRIBE_PS_REPLAY

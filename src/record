@@ -59,6 +59,9 @@ def main():
     parser.add_option("-m", "--no-mm",
            action='store_true', dest='no_mm', default=False,
            help='Disable the memory tracking')
+    parser.add_option("-x", "--no-futex-hash",
+           action='store_true', dest='no_futex_hash', default=False,
+           help='Disable the futex hashing')
     parser.add_option('-i', '--custom-init',
            action='store_true', dest='custom_init', default=False,
            help="Don't use the default init process")
@@ -114,6 +117,8 @@ def main():
                 parser.error('Invalid flag: %s' % c)
 
     disable_flags = [0, scribe.SCRIBE_DISABLE_MM][options.no_mm]
+    disable_flags |= [0, scribe.SCRIBE_DISABLE_FUTEX_HASH][options.no_futex_hash]
+
     flags = (enable_flags & scribe.SCRIBE_ALL) | disable_flags
     if options.custom_init:
         flags |= scribe.SCRIBE_CUSTOM_INIT

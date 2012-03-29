@@ -19,6 +19,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_DEFAULT
 
     enum: SCRIBE_DISABLE_MM
+    enum: SCRIBE_DISABLE_FUTEX_HASH
 
     enum: SCRIBE_PS_RECORD
     enum: SCRIBE_PS_REPLAY
