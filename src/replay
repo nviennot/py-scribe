@@ -6,6 +6,7 @@ import mmap
 import signal
 import logging
 import errno
+import datetime
 from optparse import OptionParser
 
 # Send a SIGUSR1 signal to go live when it can
@@ -59,6 +60,10 @@ def main():
     logfile = open(args[0], 'r+')
 
     stop_requested = [False]
+
+    start = datetime.datetime.now()
+    last = [datetime.datetime.now()]
+
     class ReplayContext(scribe.Context):
         def __init__(self, logfile, **kargs):
             scribe.Context.__init__(self, logfile, **kargs)
@@ -66,6 +71,14 @@ def main():
             self.mutations = []
 
         def on_bookmark(self, id, npr):
+            now = datetime.datetime.now()
+            dstart = now - start
+            dlast = now - last[0]
+            last[0] = now
+            print("Reached bmark %d at %d.%ds, +%d.%ds" %
+                    (id, dstart.seconds, dstart.microseconds,
+                        dlast.seconds, dlast.microseconds))
+
             if id == options.golive_bookmark_id or stop_requested[0]:
                 self.stop()
             else:
