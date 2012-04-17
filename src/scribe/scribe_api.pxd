@@ -25,6 +25,7 @@ cdef extern from "linux/scribe_api.h" nogil:
     enum: SCRIBE_PS_REPLAY
     enum: SCRIBE_PS_ATTACH_ON_EXEC
     enum: SCRIBE_PS_DETACHING
+    enum: SCRIBE_PS_MUTATING
     enum: SCRIBE_PS_ENABLE_SYSCALL
     enum: SCRIBE_PS_ENABLE_DATA
     enum: SCRIBE_PS_ENABLE_RESOURCE
@@ -125,7 +126,8 @@ cdef extern from "scribe.h" nogil:
     struct scribe_operations:
         void (*init_loader) (void *private_data, char_p_const *argv, char_p_const *envp)
         void (*on_backtrace) (void *private_data, loff_t *log_offset, int num)
-        void (*on_diverge) (void *private_data, scribe_event_diverge *event)
+        void (*on_diverge) (void *private_data, scribe_event_diverge *event,
+			    scribe_event *mutations, size_t mutation_size)
         void (*on_bookmark) (void *private_data, int id, int npr)
         void (*on_attach) (void *private_data, pid_t real_pid, pid_t scribe_pid)
 

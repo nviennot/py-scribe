@@ -21,12 +21,22 @@ cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil
     except:
         traceback.print_exc()
 
-cdef void on_diverge(void *private_data, scribe_api.scribe_event_diverge *event) with gil:
-    buffer = cpython.PyBytes_FromStringAndSize(
+cdef void on_diverge(void *private_data, scribe_api.scribe_event_diverge *event,
+                     scribe_api.scribe_event *mutations, size_t mutation_size) with gil:
+    diverge_event_buffer = cpython.PyBytes_FromStringAndSize(
                  <char *>event,
                  scribe_api.sizeof_event(<scribe_api.scribe_event *>event))
+
+    mutation_events = []
+    if mutations != NULL:
+        mutations_buffer = cpython.PyBytes_FromStringAndSize(
+                     <char *>mutations, mutation_size)
+        mutation_events = EventsFromBuffer(mutations_buffer)
+
     try:
-        (<Context>private_data).on_diverge(Event_from_bytes(buffer))
+        (<Context>private_data).on_diverge(
+                Event_from_bytes(diverge_event_buffer), mutation_events)
+
     except:
         traceback.print_exc()
 
@@ -382,11 +392,12 @@ cdef class Context:
     def on_backtrace(self, log_offsets):
         self.log_offsets = log_offsets
 
-    def on_diverge(self, event):
-        if event.fatal:
-            self.diverge_event = event
+    def on_diverge(self, diverge_event, mutations):
+        if diverge_event.fatal:
+            assert len(mutations) == 0
+            self.diverge_event = diverge_event
         else:
-            self.on_mutation(event)
+            self.on_mutation(diverge_event, mutations)
 
     def on_bookmark(self, id, npr):
         self.resume()
