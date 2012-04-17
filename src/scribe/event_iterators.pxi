@@ -61,9 +61,14 @@ cdef class Annotate:
     cdef _next_info(self):
         while True:
             offset = self.offset
-            event = self.events.next()
+            real_event = self.events.next()
+            event = real_event
             self.offset += len(event)
             pid_info = self.current_pid_info
+
+            if isinstance(event, EventSetFlags) or isinstance(event, EventNop):
+                if len(event.extra) > 0:
+                    event = Event.from_bytes(event.extra)
 
             if isinstance(event, EventPid):
                 self.pid_infos[self.pid] = self.current_pid_info
@@ -98,7 +103,7 @@ cdef class Annotate:
                 self.current_pid_info = PidInfo()
                 self.pid = 0
 
-            return event_info, event
+            return event_info, real_event
 
     def __next__(self):
         return self._next_info()
