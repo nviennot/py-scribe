@@ -84,7 +84,7 @@ def main():
             else:
                 self.resume()
 
-        def on_mutation(self, event):
+        def on_mutation(self, event, mutations):
             self.mutations.append(event)
 
         def has_mutations(self):
@@ -163,6 +163,8 @@ def main():
         context.wait()
     except scribe.DivergeError as derr:
         logging.debug(str(derr))
+        if context.has_mutations():
+            context.print_mutation_stats()
         exit(derr.err)
 
     if stop_requested[0] or options.golive_bookmark_id:

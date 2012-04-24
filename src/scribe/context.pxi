@@ -405,7 +405,7 @@ cdef class Context:
     def on_attach(self, real_pid, scribe_pid):
         pass
 
-    def on_mutation(self, event):
+    def on_mutation(self, event, mutations):
         pass
 
 
