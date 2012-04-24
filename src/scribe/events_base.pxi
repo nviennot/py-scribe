@@ -66,8 +66,8 @@ cdef class Event:
 
     def __str__(self):
         cdef char buffer[4096]
-        return scribe_api.scribe_get_event_str(buffer, sizeof(buffer),
-                                    self.event_struct).decode()
+        str = scribe_api.scribe_get_event_str(buffer, sizeof(buffer), self.event_struct)
+        return str.decode('ascii', 'replace').encode('ascii', 'replace')
 
     def __copy__(self):
         # Breaking COW the dirty way
