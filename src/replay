@@ -75,9 +75,9 @@ def main():
             dstart = now - start
             dlast = now - last[0]
             last[0] = now
-            print("Reached bmark %d at %d.%ds, +%d.%ds" %
-                    (id, dstart.seconds, dstart.microseconds,
-                        dlast.seconds, dlast.microseconds))
+            print("Reached bmark %d at %.3fs, +%.3fs" %
+                    (id, dstart.seconds + dstart.microseconds/1000000.0,
+                        dlast.seconds + dlast.microseconds/1000000.0))
 
             if id == options.golive_bookmark_id or stop_requested[0]:
                 self.stop()
