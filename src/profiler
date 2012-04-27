@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.6
 
 import scribe
 import mmap
@@ -16,6 +16,9 @@ def main():
     parser.add_option("-p", "--pid", action="append", dest="pids",
                       metavar='PID', type='int',
                       help="Only show the given PID. --pid can be repeated.")
+    parser.add_option("-o", "--offset",
+                      action="store_true", dest="show_offset", default=False,
+                      help="Show the offsets")
 
     (options, args) = parser.parse_args()
     if not args:
@@ -35,13 +38,21 @@ def main():
         for info, event in scribe.Annotate(events):
             if pids and not info.pid in options.pids:
                 continue
-            print("[%02d] %s%s%s" % (info.pid,
+            off_str = ""
+            if options.show_offset:
+                off_str = "%06x " % info.offset
+            print("%s[%02d] %s%s%s" % (off_str, info.pid,
                                    ("", "    ")[info.in_syscall],
                                    "  " * info.res_depth,
                                    event))
     else:
+        offset = 0
         for event in events:
-            print(event)
+            off_str = ""
+            if options.show_offset:
+                off_str = "%06x " % offset
+            print("%s%s" % (off_str, event))
+            offset += len(event)
 
 if __name__ == '__main__':
     main()
