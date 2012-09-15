@@ -15,7 +15,9 @@ from collections import deque
 
 cdef void on_backtrace(void *private_data, loff_t *log_offset, int num) with gil:
     # We can't use generators because of cython limitations
-    log_offsets = list(log_offset[i] for i in range(num))
+    log_offsets = []
+    for i in range(num):
+        log_offsets.append(log_offset[i])
     try:
         (<Context>private_data).on_backtrace(log_offsets)
     except:
