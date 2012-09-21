@@ -57,7 +57,7 @@ def main():
 
     configure_logging((logging.DEBUG, logging.INFO)[options.quiet])
 
-    logfile = open(args[0], 'r+')
+    logfile = open(args[0], 'r')
 
     stop_requested = [False]
 
