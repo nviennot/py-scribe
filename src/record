@@ -166,7 +166,7 @@ def main():
 
     if stop_requested[0]:
         logging.info("Recording stopped")
-    ps.wait()
+    exit(ps.wait())
 
 if __name__ == '__main__':
     main()
